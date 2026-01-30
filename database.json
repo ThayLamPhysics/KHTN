@@ -48,5 +48,18 @@
     "filePath": "",
     "subFilePath": null,
     "link": "https://thaylamphysics.github.io/chem8-20260124/"
+  },
+  {
+    "id": 1769766909365,
+    "title": "MUỐI - B11232131",
+    "grade": 8,
+    "category": "lectures",
+    "subject": "ly",
+    "icon": "fa-book",
+    "desc": "",
+    "createdAt": "2026-01-30T09:55:09.365Z",
+    "filePath": "",
+    "subFilePath": null,
+    "link": "https://thaylamphysics.github.io/hwchem8-20260129/"
   }
 ]
