@@ -402,36 +402,37 @@
     </div>
 
     <script>
-        // CẤU HÌNH
+        // --- CẤU HÌNH ---
         let GH_TOKEN = localStorage.getItem('GH_ADMIN_TOKEN') || '';
         const GH_OWNER = 'ThayLamPhysics';
         const GH_REPO = 'KHTN';
+        const LOGIN_USER = 'admin';
+        const LOGIN_PASS = 'admin2024';
 
-        // Khởi tạo
+        let contentDatabase = [];
+        let selectedCategory = '';
+
+        // --- KHỞI TẠO ---
         window.addEventListener('load', () => {
             document.getElementById('repoNameDisplay').innerText = GH_REPO;
 
-            // Check Session Login (User/Pass)
+            // Check Session Login
             const isLoggedIn = sessionStorage.getItem('ADMIN_LOGGED_IN');
             if (!isLoggedIn) {
                 document.getElementById('loginModal').classList.remove('hidden');
             } else {
                 document.getElementById('loginModal').classList.add('hidden');
-                // Check GitHub Token after interface login
                 validateToken();
             }
         });
 
-        // 1. XỬ LÝ ĐĂNG NHẬP (USER/PASS)
-        const LOGIN_USER = 'admin';
-        const LOGIN_PASS = 'admin2024';
-
+        // --- 1. XỬ LÝ ĐĂNG NHẬP (LỚP 1) ---
         document.getElementById('loginForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const u = document.getElementById('usernameInput').value.trim();
             const p = document.getElementById('passwordInput').value.trim();
 
-            console.log("Login Attempt:", u, p); // Debug
+            console.log("Login Check:", u, p);
 
             if (u === LOGIN_USER && p === LOGIN_PASS) {
                 sessionStorage.setItem('ADMIN_LOGGED_IN', 'true');
@@ -439,26 +440,26 @@
                 showToast('👋 Xin chào Admin!', 'success');
                 validateToken();
             } else {
-                alert(`Đăng nhập thất bại!\n\nBạn nhập: User="${u}", Pass="${p}"\nĐúng phải là: User="${LOGIN_USER}", Pass="${LOGIN_PASS}"\n\n(Hãy kiểm tra phím CapsLock hoặc bộ gõ tiếng Việt)`);
+                alert(`Đăng nhập thất bại!\nUser/Pass không đúng.\n(User: admin / Pass: admin2024)`);
             }
         });
 
-        // 2. XỬ LÝ TOKEN GITHUB
+        // --- 2. XỬ LÝ TOKEN GITHUB (LỚP 2) ---
         async function validateToken() {
             if (!GH_TOKEN) {
-                showTokenModal();
-                return;
+                showTokenModal(); return;
             }
-            // Thử kết nối
             try {
-                const res = await gitHubAPI('database.json'); // API call will use token
+                const res = await gitHubAPI('database.json');
                 if (res.ok) {
-                    loadDatabaseFromGitHub(); // Load data if ok
+                    loadDatabaseFromGitHub();
+                } else {
+                    throw new Error("Token lỗi");
                 }
             } catch (e) {
                 console.warn("Token validation failed:", e);
                 showToast('❌ Token GitHub sai hoặc hết hạn', 'error');
-                showTokenModal(); // Show modal if invalid
+                showTokenModal();
             }
         }
 
@@ -478,106 +479,8 @@
             loadDatabaseFromGitHub();
         }
 
-        // Thêm nút chức năng vào Header
-        setTimeout(() => {
-            const headerActions = document.querySelector('header .flex.gap-2');
-            if (headerActions) {
-                // Logout Button
-                const logoutBtn = document.createElement('button');
-                logoutBtn.className = 'px-4 py-2 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-red-50 hover:text-red-600 transition border border-slate-200';
-                logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt mr-2"></i>Thoát';
-                logoutBtn.onclick = () => {
-                    sessionStorage.removeItem('ADMIN_LOGGED_IN');
-                    location.reload();
-                };
-
-                // Change Token Button
-                const tokenBtn = document.createElement('button');
-                tokenBtn.className = 'px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition mr-2 border border-blue-100';
-                tokenBtn.innerHTML = '<i class="fas fa-key mr-2"></i>Đổi Token';
-                tokenBtn.onclick = showTokenModal;
-
-                headerActions.prepend(tokenBtn);
-                headerActions.appendChild(logoutBtn);
-            }
-        }, 800);
-
-        // EDIT FUNCTIONALITY
-        function openEditModal(id) {
-            const item = contentDatabase.find(i => i.id === id);
-            if (!item) return;
-
-            document.getElementById('editId').value = id;
-            document.getElementById('editTitle').value = item.title;
-            document.getElementById('editDesc').value = item.desc || '';
-            document.getElementById('editSubject').value = item.subject;
-            document.getElementById('editIcon').value = item.icon || 'fa-book';
-
-            // Show link input if it's a link type
-            const linkContainer = document.getElementById('editLinkContainer');
-            if (item.link) {
-                linkContainer.classList.remove('hidden');
-                document.getElementById('editLink').value = item.link;
-            } else {
-                linkContainer.classList.add('hidden');
-            }
-
-            document.getElementById('editModal').classList.remove('hidden');
-        }
-
-        document.getElementById('editForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const id = parseInt(document.getElementById('editId').value);
-            const title = document.getElementById('editTitle').value;
-            const desc = document.getElementById('editDesc').value;
-            const subject = document.getElementById('editSubject').value;
-            const icon = document.getElementById('editIcon').value;
-            const link = document.getElementById('editLink').value;
-
-            // Find and update local item
-            const idx = contentDatabase.findIndex(i => i.id === id);
-            if (idx === -1) return;
-
-            // Update fields
-            contentDatabase[idx].title = title;
-            contentDatabase[idx].desc = desc;
-            contentDatabase[idx].subject = subject;
-            contentDatabase[idx].icon = icon;
-            if (contentDatabase[idx].link) { // Only update link if it was a link type
-                contentDatabase[idx].link = link;
-            }
-
-            // Push to GitHub
-            showToast('💾 Đang lưu thay đổi...', 'info');
-            document.getElementById('editModal').classList.add('hidden');
-
-            try {
-                // Get SHA
-                const dbRes = await gitHubAPI('database.json');
-                if (dbRes.ok) {
-                    const dbData = await dbRes.json();
-
-                    const dbBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(contentDatabase, null, 2))));
-
-                    await gitHubAPI('database.json', 'PUT', {
-                        message: `Edit info: ${title}`, content: dbBase64, sha: dbData.sha, branch: 'main'
-                    });
-
-                    renderContentList();
-                    showToast('✅ Đã cập nhật thành công!', 'success');
-                }
-            } catch (err) {
-                showToast(`❌ Lỗi lưu: ${err.message}`, 'error');
-                console.error(err);
-            }
-        });
-
-        // ... Existing Variables ...
-        let contentDatabase = [];
-        let selectedCategory = '';
-
+        // --- 3. LOGIC APP ---
         function switchTab(tabName) {
-            // ... (giữ nguyên logic tab cũ)
             document.querySelectorAll('[id^="tab-"]').forEach(b => {
                 b.classList.remove('tab-active'); b.classList.add('text-slate-600', 'hover:bg-slate-50');
             });
@@ -590,73 +493,26 @@
         function selectCategory(cat) {
             selectedCategory = cat;
             document.getElementById('categoryInput').value = cat;
-            document.querySelectorAll('.category-btn').forEach(b => {
-                b.classList.remove('border-blue-500', 'bg-blue-50', 'border-green-500', 'bg-green-50', 'border-orange-500', 'bg-orange-50', 'border-purple-500', 'bg-purple-50');
-                b.classList.add('border-slate-200');
-            });
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-blue-50', 'border-green-500', 'bg-green-50', 'border-orange-500', 'bg-orange-50', 'border-purple-500', 'bg-purple-50', 'border-slate-200'));
+
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.add('border-slate-200')); // Reset normal border
+
             const btn = document.getElementById(`cat-${cat}`);
             const colors = { lectures: 'blue', homework: 'green', exams: 'orange', outlines: 'purple' };
             const c = colors[cat];
+
             btn.classList.remove('border-slate-200');
             btn.classList.add(`border-${c}-500`, `bg-${c}-50`);
         }
 
-        // --- GITHUB API ---
-        async function gitHubAPI(path, method = 'GET', body = null) {
-            const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
-            const headers = {
-                'Authorization': `token ${GH_TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            };
-
-            // Cache busting
-            const fetchUrl = method === 'GET' ? `${url}?t=${Date.now()}` : url;
-            const options = { method, headers };
-            if (body) options.body = JSON.stringify(body);
-
-            const res = await fetch(fetchUrl, options);
-            if (!res.ok && res.status !== 404) {
-                const err = await res.json();
-                throw new Error(err.message);
-            }
-            return res;
-        }
-
-        async function loadDatabaseFromGitHub() {
-            try {
-                const res = await gitHubAPI('database.json');
-                if (res.status === 404) {
-                    contentDatabase = [];
-                } else {
-                    const data = await res.json();
-                    const content = decodeURIComponent(escape(window.atob(data.content)));
-                    contentDatabase = JSON.parse(content);
-                }
-                renderContentList();
-                showToast('✅ Đã kết nối GitHub thành công!', 'success');
-            } catch (err) {
-                console.error(err);
-                if (err.message.includes('Bad credentials')) showToast('❌ Token GitHub sai hoặc hết hạn', 'error');
-                else showToast(`❌ Lỗi kết nối: ${err.message}`, 'error');
-            }
-        }
-
-        // Toggle UI
         function toggleContentType() {
             const type = document.querySelector('input[name="contentType"]:checked').value;
-            const htmlContainer = document.getElementById('htmlInputContainer');
-            const linkContainer = document.getElementById('linkInputContainer');
-
             if (type === 'html') {
-                htmlContainer.classList.remove('hidden');
-                linkContainer.classList.add('hidden');
-                document.getElementById('htmlContent').required = true;
-                // document.getElementById('linkInput').value = ''; 
+                document.getElementById('htmlInputContainer').classList.remove('hidden');
+                document.getElementById('linkInputContainer').classList.add('hidden');
             } else {
-                htmlContainer.classList.add('hidden');
-                linkContainer.classList.remove('hidden');
-                document.getElementById('htmlContent').required = false;
+                document.getElementById('htmlInputContainer').classList.add('hidden');
+                document.getElementById('linkInputContainer').classList.remove('hidden');
             }
         }
 
@@ -667,68 +523,92 @@
             else container.classList.add('hidden');
         }
 
-        /* FORM SUBMIT */
+        // API HELPER
+        async function gitHubAPI(path, method = 'GET', body = null) {
+            const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+            const options = {
+                method,
+                headers: {
+                    'Authorization': `token ${GH_TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json',
+                }
+            };
+            if (body) options.body = JSON.stringify(body);
+            return fetch(url, options);
+        }
+
+        // LOAD DATA
+        async function loadDatabaseFromGitHub() {
+            try {
+                showToast('🔄 Đang tải dữ liệu...', 'info');
+                const res = await fetch(`https://${GH_OWNER}.github.io/${GH_REPO}/database.json?t=${Date.now()}`);
+                if (!res.ok) throw new Error('Không thể tải database');
+                contentDatabase = await res.json();
+                renderContentList();
+                showToast('✅ Đã tải dữ liệu xong', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('⚠️ Chưa có dữ liệu hoặc lỗi tải', 'error');
+                contentDatabase = [];
+                renderContentList();
+            }
+        }
+
+        // CREATE
         document.getElementById('createForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            const grade = document.getElementById('gradeSelect').value;
-            const category = document.getElementById('categoryInput').value;
-            if (!category) return showToast('Chưa chọn danh mục!', 'error');
 
-            const contentType = document.querySelector('input[name="contentType"]:checked').value;
-            const title = document.getElementById('titleInput').value;
+            const title = document.getElementById('titleInput').value.trim();
+            const grade = document.getElementById('gradeSelect').value; // Corrected from gradeInput
+            const category = selectedCategory;
+            const subject = document.getElementById('subjectSelect').value; // Corrected from subjectInput
+            const icon = document.getElementById('iconInput').value || 'fa-book';
             const desc = document.getElementById('descInput').value;
 
-            // Xử lý dữ liệu cơ bản
-            let newContent = {
-                id: Date.now(), grade: parseInt(grade), category: category,
-                subject: document.getElementById('subjectSelect').value,
-                title: title, desc: desc, icon: document.getElementById('iconInput').value,
-                createdAt: new Date().toISOString()
+            if (!category) { alert('Vui lòng chọn Danh mục!'); return; }
+
+            // Metadata
+            const newContent = {
+                id: Date.now(),
+                title, grade: parseInt(grade), category, subject, icon, desc, // Ensure grade is int
+                createdAt: new Date().toISOString(), // Changed from date to createdAt for consistency
+                filePath: '',
+                subFilePath: null // Mặc định không có file phụ
             };
 
-            showToast('🚀 Đang xử lý...', 'info');
+            const contentType = document.querySelector('input[name="contentType"]:checked').value;
 
             try {
-                // TRƯỜNG HỢP 1: LINK NGOÀI
+                // CASE 1: LINK
                 if (contentType === 'link') {
                     const linkUrl = document.getElementById('linkInput').value;
-                    if (!linkUrl) throw new Error("Vui lòng nhập đường dẫn URL!");
-
+                    if (!linkUrl) throw new Error("Vui lòng nhập Link!");
+                    newContent.filePath = ''; // No file
                     newContent.link = linkUrl;
-                    newContent.filePath = null; // Không có file HTML
                 }
-                // TRƯỜNG HỢP 2: UPLOAD HTML
+                // CASE 2: HTML UPLOAD
                 else {
                     let htmlContent = document.getElementById('htmlContent').value;
                     if (!htmlContent) throw new Error("Vui lòng nhập nội dung HTML!");
 
-                    // Tạo thư mục riêng cho bài giảng: content/lop-x/danh-muc/bai-giang-TIMESTAMP/
                     const folderName = `${categoryNames[category]}-${Date.now()}`;
                     const folderPath = `content/lop-${grade}/${categoryNames[category]}/${folderName}`;
-
-                    const fileName = `index.html`; // File chính luôn là index.html
+                    const fileName = `index.html`;
                     const filePath = `${folderPath}/${fileName}`;
 
-                    // --- XỬ LÝ FILE PHỤ (NẾU CÓ) ---
+                    // Xử lý SubFile (test.html)
                     const hasSub = document.getElementById('hasSubFile').checked;
                     if (hasSub) {
                         const subContent = document.getElementById('subHtmlContent').value;
                         if (subContent) {
-                            showToast('📤 Đang upload file phụ (Test)...', 'info');
-
-                            // File phụ LUÔN LÀ test.html (để src="test.html" hoạt động đúng)
+                            showToast('📤 Đang upload file phụ (test.html)...', 'info');
                             const subFileName = `test.html`;
                             const subFilePath = `${folderPath}/${subFileName}`;
-
-                            // Upload Sub File
                             const subBase64 = btoa(unescape(encodeURIComponent(subContent)));
                             await gitHubAPI(subFilePath, 'PUT', {
-                                message: `Add sub-file test.html for: ${title}`, content: subBase64, branch: 'main'
+                                message: `Add sub-file test.html: ${title}`, content: subBase64, branch: 'main'
                             });
-
-                            // Không cần replace src="test.html" nữa vì file thực sự tên là test.html
-                            // nằm cùng thư mục với index.html
-
                             newContent.subFilePath = subFilePath;
                         }
                     }
@@ -736,178 +616,141 @@
                     newContent.filePath = filePath;
                     newContent.link = null;
 
-                    // 1. Upload HTML File Chính
-                    showToast('📤 Đang upload file HTML chính...', 'info');
+                    showToast('📤 Đang upload HTML chính...', 'info');
                     const contentBase64 = btoa(unescape(encodeURIComponent(htmlContent)));
                     await gitHubAPI(filePath, 'PUT', {
                         message: `Add lesson HTML: ${title}`, content: contentBase64, branch: 'main'
                     });
                 }
 
-                // 2. Update Database JSON
-                showToast('💾 Đang cập nhật danh sách...', 'info');
-                // Fetch current DB sha first
+                // UPDATE DB
+                showToast('💾 Đang cập nhật Database...', 'info');
+                // Fetch SHA DB
                 let sha = null;
                 const dbRes = await gitHubAPI('database.json');
                 if (dbRes.ok) {
                     const dbData = await dbRes.json();
-                    // Lấy lại nội dung mới nhất để tránh conflict
                     const currentStr = decodeURIComponent(escape(window.atob(dbData.content)));
                     contentDatabase = JSON.parse(currentStr);
                     sha = dbData.sha;
                 }
-
                 contentDatabase.push(newContent);
-
                 const dbBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(contentDatabase, null, 2))));
                 await gitHubAPI('database.json', 'PUT', {
                     message: `Update DB: ${title}`, content: dbBase64, sha: sha, branch: 'main'
                 });
 
-                showToast('✅ Thành công! Website sẽ cập nhật sau 2 phút.', 'success');
+                showToast('✅ Thêm bài giảng thành công!', 'success');
                 this.reset();
-                // Reset UI về mặc định
                 document.querySelector('input[value="html"]').click();
                 document.getElementById('hasSubFile').checked = false;
                 toggleSubFile();
-                setTimeout(() => switchTab('manage'), 1500);
+                setTimeout(() => switchTab('manage'), 1000);
 
             } catch (err) {
                 showToast(`❌ Lỗi: ${err.message}`, 'error');
+                console.error(err);
             }
         });
 
-        // UTIL
-        const categoryNames = { lectures: 'bai-giang', homework: 'bai-tap', exams: 'de-thi', outlines: 'de-cuong' };
+        // EDIT FUNCTIONALITY
+        function openEditModal(id) {
+            const item = contentDatabase.find(i => i.id === id);
+            if (!item) return;
 
+            document.getElementById('editId').value = id;
+            document.getElementById('editTitle').value = item.title;
+            document.getElementById('editDesc').value = item.desc || '';
+            document.getElementById('editSubject').value = item.subject;
+            document.getElementById('editIcon').value = item.icon || 'fa-book';
+
+            const linkContainer = document.getElementById('editLinkContainer');
+            if (item.link) {
+                linkContainer.classList.remove('hidden');
+                document.getElementById('editLink').value = item.link;
+            } else {
+                linkContainer.classList.add('hidden');
+            }
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('editId').value);
+            const title = document.getElementById('editTitle').value;
+            const desc = document.getElementById('editDesc').value;
+            const subject = document.getElementById('editSubject').value;
+            const icon = document.getElementById('editIcon').value;
+            const link = document.getElementById('editLink').value;
+
+            const idx = contentDatabase.findIndex(i => i.id === id);
+            if (idx === -1) return;
+
+            contentDatabase[idx].title = title;
+            contentDatabase[idx].desc = desc;
+            contentDatabase[idx].subject = subject;
+            contentDatabase[idx].icon = icon;
+            if (contentDatabase[idx].link) contentDatabase[idx].link = link;
+
+            showToast('💾 Đang lưu thay đổi...', 'info');
+            document.getElementById('editModal').classList.add('hidden');
+
+            try {
+                const dbRes = await gitHubAPI('database.json');
+                if (dbRes.ok) {
+                    const dbData = await dbRes.json();
+                    const dbBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(contentDatabase, null, 2))));
+                    await gitHubAPI('database.json', 'PUT', {
+                        message: `Edit info: ${title}`, content: dbBase64, sha: dbData.sha, branch: 'main'
+                    });
+                    renderContentList();
+                    showToast('✅ Đã cập nhật thành công!', 'success');
+                }
+            } catch (err) {
+                showToast(`❌ Lỗi lưu: ${err.message}`, 'error');
+            }
+        });
+
+        // DELETE FUNCTIONALITY
         async function deleteContentFromGitHub(id) {
             if (!confirm('Bạn có chắc muốn xóa nội dung này vĩnh viễn không?')) return;
-
             const item = contentDatabase.find(i => i.id === id);
             if (!item) return;
 
             showToast('🗑️ Đang xóa trên GitHub...', 'info');
-
             try {
-                // 1. Xóa file HTML (nếu có)
-                try {
-                    const resFile = await gitHubAPI(item.filePath);
-                    if (resFile.ok) {
-                        const fileData = await resFile.json();
-                        await gitHubAPI(item.filePath, 'DELETE', {
-                            message: `Delete lesson: ${item.title}`,
-                            sha: fileData.sha,
-                            branch: 'main'
-                        });
-                    }
-                } catch (e) { console.warn("File HTML không tồn tại hoặc đã bị xóa"); }
+                // 1. Delete File
+                if (item.filePath) {
+                    try {
+                        const resFile = await gitHubAPI(item.filePath);
+                        if (resFile.ok) {
+                            const fileData = await resFile.json();
+                            await gitHubAPI(item.filePath, 'DELETE', {
+                                message: `Delete lesson file: ${item.title}`, sha: fileData.sha, branch: 'main'
+                            });
+                        }
+                    } catch (e) { console.warn("File HTML missing:", e); }
+                }
 
-                // 2. Cập nhật database.json
-                // Phải lấy SHA mới nhất của database
+                // 2. Update DB
                 const resDb = await gitHubAPI('database.json');
                 if (resDb.ok) {
                     const dbData = await resDb.json();
-
-                    // Lọc bỏ item xóa
                     const newDb = contentDatabase.filter(i => i.id !== id);
-                    const dbContentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(newDb, null, 2))));
-
+                    const dbBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(newDb, null, 2))));
                     await gitHubAPI('database.json', 'PUT', {
-                        message: `Remove lesson from DB: ${item.title}`,
-                        content: dbContentBase64,
-                        sha: dbData.sha,
-                        branch: 'main'
+                        message: `Remove lesson DB: ${item.title}`, content: dbBase64, sha: dbData.sha, branch: 'main'
                     });
-
-                    // Update local state
                     contentDatabase = newDb;
                     renderContentList();
                     showToast('✅ Đã xóa thành công!', 'success');
                 }
             } catch (err) {
-                console.error(err);
                 showToast(`❌ Lỗi xóa: ${err.message}`, 'error');
             }
         }
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-[95] flex items-center justify-center hidden">
-        <div class="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl">
-            <h2 class="text-xl font-bold text-slate-800 mb-4">
-                <i class="fas fa-edit text-blue-500 mr-2"></i>Sửa thông tin bài giảng
-            </h2>
-            <form id="editForm" class="space-y-4">
-                <input type="hidden" id="editId">
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Tiêu đề</label>
-                    <input type="text" id="editTitle" required
-                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Mô tả ngắn</label>
-                    <textarea id="editDesc" rows="2"
-                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Môn học</label>
-                        <select id="editSubject" class="w-full px-4 py-2 border border-slate-300 rounded-lg">
-                            <option value="ly">Vật Lý</option>
-                            <option value="hoa">Hóa Học</option>
-                            <option value="sinh">Sinh Học</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Icon</label>
-                        <input type="text" id="editIcon"
-                            class="w-full px-4 py-2 border border-slate-300 rounded-lg">
-                    </div>
-                </div>
-                
-                <div id="editLinkContainer" class="hidden">
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Link liên kết (Thay đổi URL)</label>
-                    <input type="url" id="editLink"
-                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm text-blue-600">
-                </div>
 
-                <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')"
-                        class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg">Hủy</button>
-                    <button type="submit"
-                        class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md">
-                        Lưu Thay Đổi
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- ... (Keep other modals like LoginModal, TokenModal) ... -->
-
-            // ... (Keep existing functions: deleteContentFromGitHub, renderContentList) ...
-
-            // EDIT FUNCTIONALITY
-            function openEditModal(id) {
-                const item = contentDatabase.find(i => i.id === id);
-                if (!item) return;
-
-                document.getElementById('editId').value = id;
-                document.getElementById('editTitle').value = item.title;
-                document.getElementById('editDesc').value = item.desc || '';
-                document.getElementById('editSubject').value = item.subject;
-                document.getElementById('editIcon').value = item.icon || 'fa-book';
-
-                // Show link input if it's a link type
-                const linkContainer = document.getElementById('editLinkContainer');
-                if (item.link) {
-                    linkContainer.classList.remove('hidden');
-                    document.getElementById('editLink').value = item.link;
-                } else {
-                    linkContainer.classList.add('hidden');
-                }
-
-                document.getElementById('editModal').classList.remove('hidden');
-            }
 
         document.getElementById('editForm').addEventListener('submit', async function (e) {
             e.preventDefault();
