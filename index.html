@@ -268,7 +268,9 @@
                 height: 100vh !important;
                 display: flex !important;
                 flex-direction: column;
-                overflow: visible !important;
+                overflow: hidden !important;
+                /* Tránh cuộn trang chính trên mobile */
+                padding-top: 10px !important;
             }
 
             #homeView {
@@ -287,76 +289,61 @@
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                padding-bottom: 40px;
+                padding-bottom: 60px;
+                /* Tăng khoảng trống dưới */
                 position: relative;
                 overflow: visible !important;
             }
 
-            #backgroundLayer {
-                position: absolute;
-                inset: 0;
-                width: 100vw;
-                height: 100vh;
-                overflow: hidden;
-                pointer-events: none;
-                z-index: -10;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-            }
-
             .carousel-scene {
-                width: 260px;
-                height: 320px;
-                perspective: 1000px;
-                margin: 0 !important;
+                width: 240px;
+                /* Giảm width */
+                height: 300px;
+                /* Giảm height */
+                perspective: 800px;
+                margin-top: -20px !important;
+                /* Đẩy lên một chút */
                 transform: translateY(0) !important;
                 z-index: 10;
             }
 
             .carousel-cell {
-                width: 240px;
-                height: 300px;
-                font-size: 18px;
+                width: 220px;
+                /* Giảm cell width */
+                height: 280px;
+                /* Giảm cell height */
+                font-size: 16px;
                 left: 10px;
                 top: 10px;
             }
 
             .nav-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 14px;
-                background: rgba(255, 255, 255, 0.9);
+                width: 44px;
+                height: 44px;
+                font-size: 16px;
+                background: rgba(255, 255, 255, 0.95);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             }
 
             .prev-btn {
-                left: -15px;
+                left: -20px;
             }
 
             .next-btn {
-                right: -15px;
+                right: -20px;
             }
 
             h1 {
-                font-size: 1.3rem !important;
+                font-size: 1.1rem !important;
+                /* Giảm fontsize tiêu đề */
+                line-height: 1.4 !important;
                 margin-bottom: 0.5rem !important;
-                margin-top: 0.5rem;
+                margin-top: 0.2rem;
             }
 
-            @keyframes zoomInEnter {
-                0% {
-                    transform: var(--target-transform) scale(1);
-                    opacity: 1;
-                }
-
-                40% {
-                    opacity: 1;
-                }
-
-                100% {
-                    transform: var(--target-transform) scale(3) translateZ(20px);
-                    opacity: 0;
-                }
+            /* Ẩn bớt các hiệu ứng nền nặng trên mobile */
+            .horizon-streak {
+                opacity: 0.5;
             }
         }
     </style>
