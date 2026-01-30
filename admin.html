@@ -277,30 +277,69 @@
 
     </main>
 
-    <!-- Login Modal -->
-    <div id="loginModal"
-        class="fixed inset-0 bg-slate-900 bg-opacity-90 z-[100] flex items-center justify-center hidden">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl login-box">
+    <!-- Login Modal (User/Pass) -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-[100] flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl login-box relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-600"></div>
             <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-lock text-2xl text-blue-600"></i>
+                <div
+                    class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100">
+                    <i class="fas fa-user-shield text-3xl text-blue-600"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-800">Xác thực Admin</h2>
-                <p class="text-sm text-slate-500 mt-2">Nhập GitHub Token để quản lý hệ thống</p>
+                <h2 class="text-2xl font-bold text-slate-800">Đăng nhập Admin</h2>
+                <p class="text-sm text-slate-500 mt-2">Hệ thống Quản trị Nội dung</p>
             </div>
 
             <form id="loginForm" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">GitHub Access Token</label>
-                    <input type="password" id="tokenInput" required placeholder="ghp_..."
-                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm">
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Tài khoản</label>
+                    <input type="text" id="usernameInput" required placeholder="Nhập username..."
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Mật khẩu</label>
+                    <input type="password" id="passwordInput" required placeholder="Nhập mật khẩu..."
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <button type="submit"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg">
-                    <i class="fas fa-key mr-2"></i>Đăng nhập
+                    class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 rounded-xl transition shadow-lg transform hover:scale-[1.02]">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Truy cập
                 </button>
             </form>
-            <p class="text-xs text-center text-slate-400 mt-6">Token sẽ được lưu an toàn trên trình duyệt của bạn.</p>
+        </div>
+    </div>
+
+    <!-- Update Token Modal -->
+    <div id="tokenModal"
+        class="fixed inset-0 bg-slate-900 bg-opacity-80 z-[90] flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+            <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-key text-orange-500"></i> Cấu hình GitHub Token
+            </h2>
+            <p class="text-sm text-slate-600 mb-4 bg-orange-50 p-3 rounded-lg border border-orange-100">
+                <i class="fas fa-exclamation-triangle mr-1 text-orange-500"></i>
+                Token hiện tại đã hết hạn hoặc chưa được cài đặt. Vui lòng nhập Token mới.
+            </p>
+            <div class="mb-4">
+                <label class="block text-sm font-bold text-slate-700 mb-1">GitHub Access Token</label>
+                <div class="relative">
+                    <input type="password" id="newTokenInput" placeholder="ghp_..."
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent pr-10 font-mono text-sm">
+                    <button type="button"
+                        onclick="document.getElementById('newTokenInput').type = document.getElementById('newTokenInput').type === 'password' ? 'text' : 'password'"
+                        class="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="document.getElementById('tokenModal').classList.add('hidden')"
+                    class="px-5 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition">Đóng</button>
+                <button onclick="saveNewToken()"
+                    class="px-5 py-2 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition shadow-md">
+                    Lưu Token Mới
+                </button>
+            </div>
         </div>
     </div>
 
@@ -312,7 +351,7 @@
     </div>
 
     <script>
-        // CẤU HÌNH AN TOÀN - KHÔNG LƯU TOKEN Ở ĐÂY
+        // CẤU HÌNH
         let GH_TOKEN = localStorage.getItem('GH_ADMIN_TOKEN') || '';
         const GH_OWNER = 'ThayLamPhysics';
         const GH_REPO = 'KHTN';
@@ -321,51 +360,98 @@
         window.addEventListener('load', () => {
             document.getElementById('repoNameDisplay').innerText = GH_REPO;
 
-            if (!GH_TOKEN) {
+            // Check Session Login (User/Pass)
+            const isLoggedIn = sessionStorage.getItem('ADMIN_LOGGED_IN');
+            if (!isLoggedIn) {
                 document.getElementById('loginModal').classList.remove('hidden');
             } else {
-                checkStatus(); // Kiểm tra token cũ
-                loadDatabaseFromGitHub();
+                document.getElementById('loginModal').classList.add('hidden');
+                // Check GitHub Token after interface login
+                validateToken();
             }
         });
 
-        // Xử lý Đăng nhập
+        // 1. XỬ LÝ ĐĂNG NHẬP (USER/PASS)
         document.getElementById('loginForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            const token = document.getElementById('tokenInput').value.trim();
-            if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-                alert('Token không đúng định dạng (phải bắt đầu bằng ghp_ hoặc github_pat_)');
-                return;
+            const u = document.getElementById('usernameInput').value.trim();
+            const p = document.getElementById('passwordInput').value.trim();
+
+            if (u === 'admin' && p === 'admin2024') {
+                sessionStorage.setItem('ADMIN_LOGGED_IN', 'true');
+                document.getElementById('loginModal').classList.add('hidden');
+                showToast('👋 Xin chào Admin!', 'success');
+                validateToken();
+            } else {
+                alert('Sai tên đăng nhập hoặc mật khẩu!');
             }
-            GH_TOKEN = token;
-            localStorage.setItem('GH_ADMIN_TOKEN', token);
-            document.getElementById('loginModal').classList.add('hidden');
-            showToast('✅ Đăng nhập thành công', 'success');
-            loadDatabaseFromGitHub();
         });
 
-        // Thêm nút Đăng xuất vào Header (bằng code JS)
+        // 2. XỬ LÝ TOKEN GITHUB
+        async function validateToken() {
+            if (!GH_TOKEN) {
+                showTokenModal();
+                return;
+            }
+            // Thử kết nối
+            try {
+                const res = await gitHubAPI('database.json'); // API call will use token
+                if (res.ok) {
+                    loadDatabaseFromGitHub(); // Load data if ok
+                }
+            } catch (e) {
+                console.warn("Token validation failed:", e);
+                showToast('❌ Token GitHub sai hoặc hết hạn', 'error');
+                showTokenModal(); // Show modal if invalid
+            }
+        }
+
+        function showTokenModal() {
+            document.getElementById('tokenModal').classList.remove('hidden');
+        }
+
+        function saveNewToken() {
+            const t = document.getElementById('newTokenInput').value.trim();
+            if (!t.startsWith('ghp_') && !t.startsWith('github_pat_')) {
+                alert('Token không đúng định dạng!'); return;
+            }
+            GH_TOKEN = t;
+            localStorage.setItem('GH_ADMIN_TOKEN', t);
+            document.getElementById('tokenModal').classList.add('hidden');
+            showToast('✅ Đã cập nhật Token!', 'success');
+            loadDatabaseFromGitHub();
+        }
+
+        // Thêm nút chức năng vào Header
         setTimeout(() => {
             const headerActions = document.querySelector('header .flex.gap-2');
             if (headerActions) {
+                // Logout Button
                 const logoutBtn = document.createElement('button');
-                logoutBtn.className = 'px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition';
+                logoutBtn.className = 'px-4 py-2 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-red-50 hover:text-red-600 transition border border-slate-200';
                 logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt mr-2"></i>Thoát';
                 logoutBtn.onclick = () => {
-                    if (confirm('Đăng xuất sẽ xóa Token khỏi trình duyệt. Bạn có chắc không?')) {
-                        localStorage.removeItem('GH_ADMIN_TOKEN');
-                        location.reload();
-                    }
+                    sessionStorage.removeItem('ADMIN_LOGGED_IN');
+                    location.reload();
                 };
-                headerActions.prepend(logoutBtn);
+
+                // Change Token Button
+                const tokenBtn = document.createElement('button');
+                tokenBtn.className = 'px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition mr-2 border border-blue-100';
+                tokenBtn.innerHTML = '<i class="fas fa-key mr-2"></i>Đổi Token';
+                tokenBtn.onclick = showTokenModal;
+
+                headerActions.prepend(tokenBtn);
+                headerActions.appendChild(logoutBtn);
             }
-        }, 1000);
+        }, 800);
 
         // ... Existing Variables ...
         let contentDatabase = [];
         let selectedCategory = '';
 
         function switchTab(tabName) {
+            // ... (giữ nguyên logic tab cũ)
             document.querySelectorAll('[id^="tab-"]').forEach(b => {
                 b.classList.remove('tab-active'); b.classList.add('text-slate-600', 'hover:bg-slate-50');
             });
