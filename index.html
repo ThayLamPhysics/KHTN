@@ -1191,7 +1191,8 @@
             const allContent = [...database, ...contentDatabase];
 
             const filtered = allContent.filter(item => {
-                const matchGrade = (currentGrade === 'all') ? true : (item.grade === currentGrade);
+                // Sử dụng so sánh lỏng (==) để chấp nhận cả '6' (chuỗi) và 6 (số)
+                const matchGrade = (currentGrade === 'all') ? true : (item.grade == currentGrade);
                 const matchSubject = (currentSubject === 'all') || (item.subject === currentSubject);
                 const matchCategory = !currentCategory || (item.category === currentCategory);
                 const matchSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
