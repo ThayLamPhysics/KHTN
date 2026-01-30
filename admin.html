@@ -423,18 +423,23 @@
         });
 
         // 1. XỬ LÝ ĐĂNG NHẬP (USER/PASS)
+        const LOGIN_USER = 'admin';
+        const LOGIN_PASS = 'admin2024';
+
         document.getElementById('loginForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const u = document.getElementById('usernameInput').value.trim();
             const p = document.getElementById('passwordInput').value.trim();
 
-            if (u === 'admin' && p === 'admin2024') {
+            console.log("Login Attempt:", u, p); // Debug
+
+            if (u === LOGIN_USER && p === LOGIN_PASS) {
                 sessionStorage.setItem('ADMIN_LOGGED_IN', 'true');
                 document.getElementById('loginModal').classList.add('hidden');
                 showToast('👋 Xin chào Admin!', 'success');
                 validateToken();
             } else {
-                alert('Sai tên đăng nhập hoặc mật khẩu!');
+                alert(`Đăng nhập thất bại!\n\nBạn nhập: User="${u}", Pass="${p}"\nĐúng phải là: User="${LOGIN_USER}", Pass="${LOGIN_PASS}"\n\n(Hãy kiểm tra phím CapsLock hoặc bộ gõ tiếng Việt)`);
             }
         });
 
@@ -879,12 +884,11 @@
 
     <!-- ... (Keep other modals like LoginModal, TokenModal) ... -->
 
-            <script>
-        // ... (Keep configuration) ...
+            // ... (Keep existing functions: deleteContentFromGitHub, renderContentList) ...
 
-                // EDIT FUNCTIONALITY
-                function openEditModal(id) {
-            const item = contentDatabase.find(i => i.id === id);
+            // EDIT FUNCTIONALITY
+            function openEditModal(id) {
+                const item = contentDatabase.find(i => i.id === id);
                 if (!item) return;
 
                 document.getElementById('editId').value = id;
@@ -897,73 +901,72 @@
                 const linkContainer = document.getElementById('editLinkContainer');
                 if (item.link) {
                     linkContainer.classList.remove('hidden');
-                document.getElementById('editLink').value = item.link;
-            } else {
+                    document.getElementById('editLink').value = item.link;
+                } else {
                     linkContainer.classList.add('hidden');
-            }
+                }
 
                 document.getElementById('editModal').classList.remove('hidden');
-        }
+            }
 
-                document.getElementById('editForm').addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                const id = parseInt(document.getElementById('editId').value);
-                const title = document.getElementById('editTitle').value;
-                const desc = document.getElementById('editDesc').value;
-                const subject = document.getElementById('editSubject').value;
-                const icon = document.getElementById('editIcon').value;
-                const link = document.getElementById('editLink').value;
+        document.getElementById('editForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('editId').value);
+            const title = document.getElementById('editTitle').value;
+            const desc = document.getElementById('editDesc').value;
+            const subject = document.getElementById('editSubject').value;
+            const icon = document.getElementById('editIcon').value;
+            const link = document.getElementById('editLink').value;
 
             // Find and update local item
             const idx = contentDatabase.findIndex(i => i.id === id);
-                if (idx === -1) return;
+            if (idx === -1) return;
 
-                // Update fields
-                contentDatabase[idx].title = title;
-                contentDatabase[idx].desc = desc;
-                contentDatabase[idx].subject = subject;
-                contentDatabase[idx].icon = icon;
-                if (contentDatabase[idx].link) { // Only update link if it was a link type
-                    contentDatabase[idx].link = link;
+            // Update fields
+            contentDatabase[idx].title = title;
+            contentDatabase[idx].desc = desc;
+            contentDatabase[idx].subject = subject;
+            contentDatabase[idx].icon = icon;
+            if (contentDatabase[idx].link) { // Only update link if it was a link type
+                contentDatabase[idx].link = link;
             }
 
-                // Push to GitHub
-                showToast('💾 Đang lưu thay đổi...', 'info');
-                document.getElementById('editModal').classList.add('hidden');
+            // Push to GitHub
+            showToast('💾 Đang lưu thay đổi...', 'info');
+            document.getElementById('editModal').classList.add('hidden');
 
-                try {
+            try {
                 // Get SHA
                 const dbRes = await gitHubAPI('database.json');
                 if (dbRes.ok) {
                     const dbData = await dbRes.json();
 
-                const dbBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(contentDatabase, null, 2))));
+                    const dbBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(contentDatabase, null, 2))));
 
-                await gitHubAPI('database.json', 'PUT', {
-                    message: `Edit info: ${title}`, content: dbBase64, sha: dbData.sha, branch: 'main'
+                    await gitHubAPI('database.json', 'PUT', {
+                        message: `Edit info: ${title}`, content: dbBase64, sha: dbData.sha, branch: 'main'
                     });
 
-                renderContentList();
-                showToast('✅ Đã cập nhật thành công!', 'success');
+                    renderContentList();
+                    showToast('✅ Đã cập nhật thành công!', 'success');
                 }
             } catch (err) {
-                    showToast(`❌ Lỗi lưu: ${err.message}`, 'error');
+                showToast(`❌ Lỗi lưu: ${err.message}`, 'error');
                 console.error(err);
             }
         });
 
-                // ... (Keep existing functions: deleteContentFromGitHub, renderContentList) ...
-
-                function renderContentList() {
+        function renderContentList() {
             const listEl = document.getElementById('contentList');
-                if (!contentDatabase || contentDatabase.length === 0) {
-                    listEl.innerHTML = '';
+            if (!contentDatabase || contentDatabase.length === 0) {
+                listEl.innerHTML = '';
+                // ... (rest of function)
                 document.getElementById('emptyManage').classList.remove('hidden');
                 return;
             }
-                document.getElementById('emptyManage').classList.add('hidden');
+            document.getElementById('emptyManage').classList.add('hidden');
 
-                const gradeFilter = document.getElementById('filterGrade').value;
+            const gradeFilter = document.getElementById('filterGrade').value;
             const displayed = gradeFilter ? contentDatabase.filter(i => i.grade == gradeFilter) : contentDatabase;
 
             listEl.innerHTML = displayed.map(item => `
