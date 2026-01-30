@@ -295,7 +295,16 @@
                     <textarea id="editDesc" rows="2"
                         class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Danh mục</label>
+                        <select id="editCategory" class="w-full px-4 py-2 border border-slate-300 rounded-lg">
+                            <option value="lectures">Bài giảng</option>
+                            <option value="homework">Bài tập về nhà</option>
+                            <option value="exams">Đề thi</option>
+                            <option value="outlines">Đề cương</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Lớp</label>
                         <select id="editGrade" class="w-full px-4 py-2 border border-slate-300 rounded-lg">
@@ -308,6 +317,9 @@
                             <option value="12">Lớp 12</option>
                         </select>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Môn học</label>
                         <select id="editSubject" class="w-full px-4 py-2 border border-slate-300 rounded-lg">
@@ -673,10 +685,12 @@
             document.getElementById('editId').value = id;
             document.getElementById('editTitle').value = item.title;
             document.getElementById('editDesc').value = item.desc || '';
-            document.getElementById('editGrade').value = item.grade || '6'; // Set Grade
+            document.getElementById('editCategory').value = item.category || 'lectures'; // Set Category
+            document.getElementById('editGrade').value = item.grade || '6';
             document.getElementById('editSubject').value = item.subject;
             document.getElementById('editIcon').value = item.icon || 'fa-book';
 
+            // Show link input if it's a link type
             const linkContainer = document.getElementById('editLinkContainer');
             if (item.link) {
                 linkContainer.classList.remove('hidden');
@@ -684,6 +698,7 @@
             } else {
                 linkContainer.classList.add('hidden');
             }
+
             document.getElementById('editModal').classList.remove('hidden');
         }
 
@@ -692,7 +707,8 @@
             const id = parseInt(document.getElementById('editId').value);
             const title = document.getElementById('editTitle').value;
             const desc = document.getElementById('editDesc').value;
-            const grade = parseInt(document.getElementById('editGrade').value); // Get Grade
+            const category = document.getElementById('editCategory').value; // Get Category
+            const grade = parseInt(document.getElementById('editGrade').value);
             const subject = document.getElementById('editSubject').value;
             const icon = document.getElementById('editIcon').value;
             const link = document.getElementById('editLink').value;
@@ -704,7 +720,8 @@
             // Update fields
             contentDatabase[idx].title = title;
             contentDatabase[idx].desc = desc;
-            contentDatabase[idx].grade = grade; // Update Grade
+            contentDatabase[idx].category = category; // Update Category
+            contentDatabase[idx].grade = grade;
             contentDatabase[idx].subject = subject;
             contentDatabase[idx].icon = icon;
             if (contentDatabase[idx].link) { // Only update link if it was a link type
@@ -720,10 +737,13 @@
                 const dbRes = await gitHubAPI('database.json');
                 if (dbRes.ok) {
                     const dbData = await dbRes.json();
+
                     const dbBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(contentDatabase, null, 2))));
+
                     await gitHubAPI('database.json', 'PUT', {
                         message: `Edit info: ${title}`, content: dbBase64, sha: dbData.sha, branch: 'main'
                     });
+
                     renderContentList();
                     showToast('✅ Đã cập nhật thành công!', 'success');
                 }
