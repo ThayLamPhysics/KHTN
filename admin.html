@@ -277,6 +277,57 @@
 
     </main>
 
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-[95] flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+            <h2 class="text-xl font-bold text-slate-800 mb-4">
+                <i class="fas fa-edit text-blue-500 mr-2"></i>Sửa thông tin bài giảng
+            </h2>
+            <form id="editForm" class="space-y-4">
+                <input type="hidden" id="editId">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Tiêu đề</label>
+                    <input type="text" id="editTitle" required
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Mô tả ngắn</label>
+                    <textarea id="editDesc" rows="2"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Môn học</label>
+                        <select id="editSubject" class="w-full px-4 py-2 border border-slate-300 rounded-lg">
+                            <option value="ly">Vật Lý</option>
+                            <option value="hoa">Hóa Học</option>
+                            <option value="sinh">Sinh Học</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Icon</label>
+                        <input type="text" id="editIcon" class="w-full px-4 py-2 border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+
+                <div id="editLinkContainer" class="hidden">
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Link liên kết (Thay đổi URL)</label>
+                    <input type="url" id="editLink"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm text-blue-600">
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')"
+                        class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg">Hủy</button>
+                    <button type="submit"
+                        class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md">
+                        Lưu Thay Đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Login Modal (User/Pass) -->
     <div id="loginModal" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-[100] flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl login-box relative overflow-hidden">
@@ -445,6 +496,76 @@
                 headerActions.appendChild(logoutBtn);
             }
         }, 800);
+
+        // EDIT FUNCTIONALITY
+        function openEditModal(id) {
+            const item = contentDatabase.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('editId').value = id;
+            document.getElementById('editTitle').value = item.title;
+            document.getElementById('editDesc').value = item.desc || '';
+            document.getElementById('editSubject').value = item.subject;
+            document.getElementById('editIcon').value = item.icon || 'fa-book';
+
+            // Show link input if it's a link type
+            const linkContainer = document.getElementById('editLinkContainer');
+            if (item.link) {
+                linkContainer.classList.remove('hidden');
+                document.getElementById('editLink').value = item.link;
+            } else {
+                linkContainer.classList.add('hidden');
+            }
+
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('editId').value);
+            const title = document.getElementById('editTitle').value;
+            const desc = document.getElementById('editDesc').value;
+            const subject = document.getElementById('editSubject').value;
+            const icon = document.getElementById('editIcon').value;
+            const link = document.getElementById('editLink').value;
+
+            // Find and update local item
+            const idx = contentDatabase.findIndex(i => i.id === id);
+            if (idx === -1) return;
+
+            // Update fields
+            contentDatabase[idx].title = title;
+            contentDatabase[idx].desc = desc;
+            contentDatabase[idx].subject = subject;
+            contentDatabase[idx].icon = icon;
+            if (contentDatabase[idx].link) { // Only update link if it was a link type
+                contentDatabase[idx].link = link;
+            }
+
+            // Push to GitHub
+            showToast('💾 Đang lưu thay đổi...', 'info');
+            document.getElementById('editModal').classList.add('hidden');
+
+            try {
+                // Get SHA
+                const dbRes = await gitHubAPI('database.json');
+                if (dbRes.ok) {
+                    const dbData = await dbRes.json();
+
+                    const dbBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(contentDatabase, null, 2))));
+
+                    await gitHubAPI('database.json', 'PUT', {
+                        message: `Edit info: ${title}`, content: dbBase64, sha: dbData.sha, branch: 'main'
+                    });
+
+                    renderContentList();
+                    showToast('✅ Đã cập nhật thành công!', 'success');
+                }
+            } catch (err) {
+                showToast(`❌ Lỗi lưu: ${err.message}`, 'error');
+                console.error(err);
+            }
+        });
 
         // ... Existing Variables ...
         let contentDatabase = [];
@@ -704,28 +825,163 @@
             }
         }
 
-        function renderContentList() {
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-[95] flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+            <h2 class="text-xl font-bold text-slate-800 mb-4">
+                <i class="fas fa-edit text-blue-500 mr-2"></i>Sửa thông tin bài giảng
+            </h2>
+            <form id="editForm" class="space-y-4">
+                <input type="hidden" id="editId">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Tiêu đề</label>
+                    <input type="text" id="editTitle" required
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Mô tả ngắn</label>
+                    <textarea id="editDesc" rows="2"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Môn học</label>
+                        <select id="editSubject" class="w-full px-4 py-2 border border-slate-300 rounded-lg">
+                            <option value="ly">Vật Lý</option>
+                            <option value="hoa">Hóa Học</option>
+                            <option value="sinh">Sinh Học</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Icon</label>
+                        <input type="text" id="editIcon"
+                            class="w-full px-4 py-2 border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+                
+                <div id="editLinkContainer" class="hidden">
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Link liên kết (Thay đổi URL)</label>
+                    <input type="url" id="editLink"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm text-blue-600">
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')"
+                        class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg">Hủy</button>
+                    <button type="submit"
+                        class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md">
+                        Lưu Thay Đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ... (Keep other modals like LoginModal, TokenModal) ... -->
+
+            <script>
+        // ... (Keep configuration) ...
+
+                // EDIT FUNCTIONALITY
+                function openEditModal(id) {
+            const item = contentDatabase.find(i => i.id === id);
+                if (!item) return;
+
+                document.getElementById('editId').value = id;
+                document.getElementById('editTitle').value = item.title;
+                document.getElementById('editDesc').value = item.desc || '';
+                document.getElementById('editSubject').value = item.subject;
+                document.getElementById('editIcon').value = item.icon || 'fa-book';
+
+                // Show link input if it's a link type
+                const linkContainer = document.getElementById('editLinkContainer');
+                if (item.link) {
+                    linkContainer.classList.remove('hidden');
+                document.getElementById('editLink').value = item.link;
+            } else {
+                    linkContainer.classList.add('hidden');
+            }
+
+                document.getElementById('editModal').classList.remove('hidden');
+        }
+
+                document.getElementById('editForm').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                const id = parseInt(document.getElementById('editId').value);
+                const title = document.getElementById('editTitle').value;
+                const desc = document.getElementById('editDesc').value;
+                const subject = document.getElementById('editSubject').value;
+                const icon = document.getElementById('editIcon').value;
+                const link = document.getElementById('editLink').value;
+
+            // Find and update local item
+            const idx = contentDatabase.findIndex(i => i.id === id);
+                if (idx === -1) return;
+
+                // Update fields
+                contentDatabase[idx].title = title;
+                contentDatabase[idx].desc = desc;
+                contentDatabase[idx].subject = subject;
+                contentDatabase[idx].icon = icon;
+                if (contentDatabase[idx].link) { // Only update link if it was a link type
+                    contentDatabase[idx].link = link;
+            }
+
+                // Push to GitHub
+                showToast('💾 Đang lưu thay đổi...', 'info');
+                document.getElementById('editModal').classList.add('hidden');
+
+                try {
+                // Get SHA
+                const dbRes = await gitHubAPI('database.json');
+                if (dbRes.ok) {
+                    const dbData = await dbRes.json();
+
+                const dbBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(contentDatabase, null, 2))));
+
+                await gitHubAPI('database.json', 'PUT', {
+                    message: `Edit info: ${title}`, content: dbBase64, sha: dbData.sha, branch: 'main'
+                    });
+
+                renderContentList();
+                showToast('✅ Đã cập nhật thành công!', 'success');
+                }
+            } catch (err) {
+                    showToast(`❌ Lỗi lưu: ${err.message}`, 'error');
+                console.error(err);
+            }
+        });
+
+                // ... (Keep existing functions: deleteContentFromGitHub, renderContentList) ...
+
+                function renderContentList() {
             const listEl = document.getElementById('contentList');
-            if (!contentDatabase || contentDatabase.length === 0) {
-                listEl.innerHTML = '';
+                if (!contentDatabase || contentDatabase.length === 0) {
+                    listEl.innerHTML = '';
                 document.getElementById('emptyManage').classList.remove('hidden');
                 return;
             }
-            document.getElementById('emptyManage').classList.add('hidden');
+                document.getElementById('emptyManage').classList.add('hidden');
 
-            const gradeFilter = document.getElementById('filterGrade').value;
+                const gradeFilter = document.getElementById('filterGrade').value;
             const displayed = gradeFilter ? contentDatabase.filter(i => i.grade == gradeFilter) : contentDatabase;
 
             listEl.innerHTML = displayed.map(item => `
                 <div class="p-4 border rounded-xl bg-slate-50 flex justify-between items-center group hover:bg-white hover:shadow-md transition">
                     <div>
                         <div class="font-bold text-slate-800 group-hover:text-blue-600 transition">${item.title}</div>
-                        <div class="text-xs text-slate-500 mb-1">Lớp ${item.grade} | ${item.category}</div>
-                        <a href="https://${GH_OWNER}.github.io/${GH_REPO}/${item.filePath}" target="_blank" class="text-xs text-blue-500 hover:underline font-mono bg-blue-50 px-2 py-1 rounded">
+                        <div class="text-xs text-slate-500 mb-1">
+                            <span class="uppercase font-bold text-xs px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 mr-1">${item.subject}</span>
+                            Lớp ${item.grade} | ${item.category}
+                        </div>
+                        <a href="${item.link ? item.link : `https://${GH_OWNER}.github.io/${GH_REPO}/${item.filePath.includes('index.html') ? item.filePath.replace('/index.html', '/') : item.filePath}`}" target="_blank" class="text-xs text-blue-500 hover:underline font-mono bg-blue-50 px-2 py-1 rounded">
                             <i class="fas fa-external-link-alt mr-1"></i>Xem thử
                         </a>
                     </div>
-                    <div class="pl-4">
+                    <div class="pl-4 flex gap-2">
+                        <button onclick="openEditModal(${item.id})" class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 rounded-xl transition shadow-sm" title="Sửa thông tin">
+                            <i class="fas fa-pen"></i>
+                        </button>
                         <button onclick="deleteContentFromGitHub(${item.id})" class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 rounded-xl transition shadow-sm" title="Xóa bài giảng này">
                             <i class="fas fa-trash-alt"></i>
                         </button>
