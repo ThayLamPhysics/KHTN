@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Quản lý Bài Giảng</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+
+        .tab-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .category-btn {
+            transition: all 0.3s ease;
+        }
+
+        .category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-800">Admin Panel (Đã kích hoạt)</h1>
+                        <p class="text-xs text-slate-500">Tài khoản: ThayLamPhysics | Repo: <span id="repoNameDisplay"
+                                class="font-mono font-bold text-blue-600">...</span></p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="checkStatus()"
+                        class="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition">
+                        <i class="fas fa-satellite-dish mr-2"></i>Kiểm tra kết nối
+                    </button>
+                    <a href="index.html"
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-medium text-slate-700 transition">
+                        <i class="fas fa-home mr-2"></i>Về Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-2 mb-6 flex gap-2 overflow-x-auto">
+            <button onclick="switchTab('create')" id="tab-create"
+                class="tab-active px-6 py-3 rounded-xl font-semibold text-sm whitespace-nowrap">
+                <i class="fas fa-plus-circle mr-2"></i>Tạo mới
+            </button>
+            <button onclick="switchTab('manage')" id="tab-manage"
+                class="px-6 py-3 rounded-xl font-semibold text-sm text-slate-600 hover:bg-slate-50 whitespace-nowrap">
+                <i class="fas fa-list mr-2"></i>Quản lý GitHub
+            </button>
+        </div>
+
+        <!-- Tab Content: Tạo mới -->
+        <div id="content-create" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">
+                    <i class="fas fa-file-circle-plus text-blue-500 mr-2"></i>Tạo nội dung mới
+                </h2>
+
+                <form id="createForm" class="space-y-6">
+                    <!-- Chọn lớp -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Lớp học</label>
+                        <select id="gradeSelect" required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">-- Chọn lớp --</option>
+                            <option value="6">Lớp 6</option>
+                            <option value="7">Lớp 7</option>
+                            <option value="8">Lớp 8</option>
+                            <option value="9">Lớp 9</option>
+                            <option value="10">Lớp 10</option>
+                            <option value="11">Lớp 11</option>
+                            <option value="12">Lớp 12</option>
+                        </select>
+                    </div>
+
+                    <!-- Chọn danh mục -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Danh mục</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <button type="button" onclick="selectCategory('lectures')"
+                                class="category-btn p-4 border-2 border-slate-200 rounded-xl text-center hover:border-blue-500"
+                                id="cat-lectures">
+                                <i class="fas fa-book text-2xl text-blue-500 mb-2"></i>
+                                <p class="text-sm font-semibold text-slate-700">Bài giảng</p>
+                            </button>
+                            <button type="button" onclick="selectCategory('homework')"
+                                class="category-btn p-4 border-2 border-slate-200 rounded-xl text-center hover:border-green-500"
+                                id="cat-homework">
+                                <i class="fas fa-pen-to-square text-2xl text-green-500 mb-2"></i>
+                                <p class="text-sm font-semibold text-slate-700">Bài tập</p>
+                            </button>
+                            <button type="button" onclick="selectCategory('exams')"
+                                class="category-btn p-4 border-2 border-slate-200 rounded-xl text-center hover:border-orange-500"
+                                id="cat-exams">
+                                <i class="fas fa-file-pen text-2xl text-orange-500 mb-2"></i>
+                                <p class="text-sm font-semibold text-slate-700">Đề thi</p>
+                            </button>
+                            <button type="button" onclick="selectCategory('outlines')"
+                                class="category-btn p-4 border-2 border-slate-200 rounded-xl text-center hover:border-purple-500"
+                                id="cat-outlines">
+                                <i class="fas fa-clipboard-list text-2xl text-purple-500 mb-2"></i>
+                                <p class="text-sm font-semibold text-slate-700">Đề cương</p>
+                            </button>
+                        </div>
+                        <input type="hidden" id="categoryInput" required>
+                    </div>
+
+                    <!-- Môn học -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Môn học</label>
+                        <select id="subjectSelect" required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">-- Chọn môn --</option>
+                            <option value="ly">Vật Lý</option>
+                            <option value="hoa">Hóa Học</option>
+                            <option value="sinh">Sinh Học</option>
+                        </select>
+                    </div>
+
+                    <!-- Tiêu đề -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Tiêu đề</label>
+                        <input type="text" id="titleInput" required placeholder="Ví dụ: Bài 1: Đo độ dài"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Mô tả -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Mô tả ngắn</label>
+                        <textarea id="descInput" rows="3" placeholder="Mô tả ngắn gọn về nội dung..."
+                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    </div>
+
+                    <!-- Icon -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Icon (Font Awesome class)</label>
+                        <input type="text" id="iconInput" placeholder="fa-ruler" value="fa-book"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Content Source Type -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Loại nội dung</label>
+                        <div class="flex gap-6 mb-4">
+                            <label
+                                class="flex items-center gap-2 cursor-pointer p-3 border rounded-xl hover:bg-slate-50 transition border-blue-200 bg-blue-50/50">
+                                <input type="radio" name="contentType" value="html" checked
+                                    onchange="toggleContentType()" class="w-4 h-4 text-blue-600">
+                                <span class="text-sm font-medium">Soạn thảo HTML</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-2 cursor-pointer p-3 border rounded-xl hover:bg-slate-50 transition">
+                                <input type="radio" name="contentType" value="link" onchange="toggleContentType()"
+                                    class="w-4 h-4 text-blue-600">
+                                <span class="text-sm font-medium">Link bên ngoài (YouTube, Web...)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- External Link Input (Hidden by default) -->
+                    <div id="linkInputContainer" class="hidden">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Đường dẫn bài giảng (URL)</label>
+                        <input type="url" id="linkInput" placeholder="https://example.com/bai-giang..."
+                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-slate-500 mt-1">Nhập link đầy đủ (bao gồm https://)</p>
+                    </div>
+
+                    <!-- HTML Content Input -->
+                    <div id="htmlInputContainer">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Nội dung HTML (Bài giảng
+                            chính)</label>
+                        <textarea id="htmlContent" rows="10" placeholder="Paste code HTML của bài giảng vào đây..."
+                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm mb-4"></textarea>
+
+                        <!-- Checkbox đính kèm File phụ -->
+                        <div class="mb-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="hasSubFile" onchange="toggleSubFile()"
+                                    class="w-4 h-4 text-blue-600 rounded">
+                                <span class="text-sm font-medium text-slate-700">Đính kèm file HTML phụ (Ví dụ: Code bài
+                                    Test để nhúng iframe)</span>
+                            </label>
+                        </div>
+
+                        <!-- Sub HTML Content Input -->
+                        <div id="subHtmlContainer" class="hidden pl-4 border-l-4 border-slate-200">
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Nội dung HTML Phụ (Bài
+                                Test)</label>
+                            <p class="text-xs text-slate-500 mb-2 text-blue-600">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                File này sẽ được lưu cố định là <span class="font-bold font-mono">test.html</span> trong
+                                thư mục bài giảng.
+                                <br>
+                                Trong bài chính, bạn hãy nhúng bằng code:
+                                <span
+                                    class="font-mono bg-slate-100 px-2 py-1 rounded border border-slate-300 select-all block mt-1 w-fit">&lt;iframe
+                                    src="test.html" style="width:100%; height:500px;
+                                    border:none;"&gt;&lt;/iframe&gt;</span>
+                            </p>
+                            <textarea id="subHtmlContent" rows="6" placeholder="Paste code HTML bài Test vào đây..."
+                                class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-4">
+                        <button type="submit"
+                            class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-xl hover:shadow-lg transition transform hover:scale-105">
+                            <i class="fas fa-cloud-upload-alt mr-2"></i>Lưu & Đẩy lên Web
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tab Content: Quản lý -->
+        <div id="content-manage" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">
+                    <i class="fas fa-server text-green-500 mr-2"></i>Dữ liệu trên GitHub
+                </h2>
+
+                <div class="flex gap-4 mb-4">
+                    <button onclick="loadDatabaseFromGitHub()"
+                        class="px-4 py-2 bg-slate-100 rounded-lg hover:bg-slate-200 text-slate-700 transition">
+                        <i class="fas fa-sync-alt mr-2"></i>Làm mới
+                    </button>
+                    <select id="filterGrade" onchange="renderContentList()"
+                        class="px-4 py-2 border border-slate-300 rounded-lg">
+                        <option value="">Tất cả lớp</option>
+                        <option value="6">Lớp 6</option>
+                        <option value="7">Lớp 7</option>
+                        <option value="8">Lớp 8</option>
+                        <option value="9">Lớp 9</option>
+                        <option value="10">Lớp 10</option>
+                        <option value="11">Lớp 11</option>
+                        <option value="12">Lớp 12</option>
+                    </select>
+                </div>
+
+                <div id="contentList" class="space-y-3"></div>
+                <div id="emptyManage" class="text-center py-20 hidden">
+                    <i class="fas fa-inbox text-6xl text-slate-300 mb-4"></i>
+                    <p class="text-slate-500">Chưa có nội dung nào trên GitHub</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Login Modal -->
+    <div id="loginModal"
+        class="fixed inset-0 bg-slate-900 bg-opacity-90 z-[100] flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl login-box">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-lock text-2xl text-blue-600"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Xác thực Admin</h2>
+                <p class="text-sm text-slate-500 mt-2">Nhập GitHub Token để quản lý hệ thống</p>
+            </div>
+
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">GitHub Access Token</label>
+                    <input type="password" id="tokenInput" required placeholder="ghp_..."
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm">
+                </div>
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg">
+                    <i class="fas fa-key mr-2"></i>Đăng nhập
+                </button>
+            </form>
+            <p class="text-xs text-center text-slate-400 mt-6">Token sẽ được lưu an toàn trên trình duyệt của bạn.</p>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"
+        class="fixed bottom-4 right-4 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-24 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <i class="fas fa-circle-info text-blue-400"></i>
+        <span id="toastMessage">Thông báo</span>
+    </div>
+
+    <script>
+        // CẤU HÌNH AN TOÀN - KHÔNG LƯU TOKEN Ở ĐÂY
+        let GH_TOKEN = localStorage.getItem('GH_ADMIN_TOKEN') || '';
+        const GH_OWNER = 'ThayLamPhysics';
+        const GH_REPO = 'KHTN';
+
+        // Khởi tạo
+        window.addEventListener('load', () => {
+            document.getElementById('repoNameDisplay').innerText = GH_REPO;
+
+            if (!GH_TOKEN) {
+                document.getElementById('loginModal').classList.remove('hidden');
+            } else {
+                checkStatus(); // Kiểm tra token cũ
+                loadDatabaseFromGitHub();
+            }
+        });
+
+        // Xử lý Đăng nhập
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const token = document.getElementById('tokenInput').value.trim();
+            if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+                alert('Token không đúng định dạng (phải bắt đầu bằng ghp_ hoặc github_pat_)');
+                return;
+            }
+            GH_TOKEN = token;
+            localStorage.setItem('GH_ADMIN_TOKEN', token);
+            document.getElementById('loginModal').classList.add('hidden');
+            showToast('✅ Đăng nhập thành công', 'success');
+            loadDatabaseFromGitHub();
+        });
+
+        // Thêm nút Đăng xuất vào Header (bằng code JS)
+        setTimeout(() => {
+            const headerActions = document.querySelector('header .flex.gap-2');
+            if (headerActions) {
+                const logoutBtn = document.createElement('button');
+                logoutBtn.className = 'px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition';
+                logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt mr-2"></i>Thoát';
+                logoutBtn.onclick = () => {
+                    if (confirm('Đăng xuất sẽ xóa Token khỏi trình duyệt. Bạn có chắc không?')) {
+                        localStorage.removeItem('GH_ADMIN_TOKEN');
+                        location.reload();
+                    }
+                };
+                headerActions.prepend(logoutBtn);
+            }
+        }, 1000);
+
+        // ... Existing Variables ...
+        let contentDatabase = [];
+        let selectedCategory = '';
+
+        function switchTab(tabName) {
+            document.querySelectorAll('[id^="tab-"]').forEach(b => {
+                b.classList.remove('tab-active'); b.classList.add('text-slate-600', 'hover:bg-slate-50');
+            });
+            document.getElementById(`tab-${tabName}`).classList.add('tab-active');
+            document.getElementById(`tab-${tabName}`).classList.remove('text-slate-600', 'hover:bg-slate-50');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+        }
+
+        function selectCategory(cat) {
+            selectedCategory = cat;
+            document.getElementById('categoryInput').value = cat;
+            document.querySelectorAll('.category-btn').forEach(b => {
+                b.classList.remove('border-blue-500', 'bg-blue-50', 'border-green-500', 'bg-green-50', 'border-orange-500', 'bg-orange-50', 'border-purple-500', 'bg-purple-50');
+                b.classList.add('border-slate-200');
+            });
+            const btn = document.getElementById(`cat-${cat}`);
+            const colors = { lectures: 'blue', homework: 'green', exams: 'orange', outlines: 'purple' };
+            const c = colors[cat];
+            btn.classList.remove('border-slate-200');
+            btn.classList.add(`border-${c}-500`, `bg-${c}-50`);
+        }
+
+        // --- GITHUB API ---
+        async function gitHubAPI(path, method = 'GET', body = null) {
+            const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+            const headers = {
+                'Authorization': `token ${GH_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            };
+
+            // Cache busting
+            const fetchUrl = method === 'GET' ? `${url}?t=${Date.now()}` : url;
+            const options = { method, headers };
+            if (body) options.body = JSON.stringify(body);
+
+            const res = await fetch(fetchUrl, options);
+            if (!res.ok && res.status !== 404) {
+                const err = await res.json();
+                throw new Error(err.message);
+            }
+            return res;
+        }
+
+        async function loadDatabaseFromGitHub() {
+            try {
+                const res = await gitHubAPI('database.json');
+                if (res.status === 404) {
+                    contentDatabase = [];
+                } else {
+                    const data = await res.json();
+                    const content = decodeURIComponent(escape(window.atob(data.content)));
+                    contentDatabase = JSON.parse(content);
+                }
+                renderContentList();
+                showToast('✅ Đã kết nối GitHub thành công!', 'success');
+            } catch (err) {
+                console.error(err);
+                if (err.message.includes('Bad credentials')) showToast('❌ Token GitHub sai hoặc hết hạn', 'error');
+                else showToast(`❌ Lỗi kết nối: ${err.message}`, 'error');
+            }
+        }
+
+        // Toggle UI
+        function toggleContentType() {
+            const type = document.querySelector('input[name="contentType"]:checked').value;
+            const htmlContainer = document.getElementById('htmlInputContainer');
+            const linkContainer = document.getElementById('linkInputContainer');
+
+            if (type === 'html') {
+                htmlContainer.classList.remove('hidden');
+                linkContainer.classList.add('hidden');
+                document.getElementById('htmlContent').required = true;
+                // document.getElementById('linkInput').value = ''; 
+            } else {
+                htmlContainer.classList.add('hidden');
+                linkContainer.classList.remove('hidden');
+                document.getElementById('htmlContent').required = false;
+            }
+        }
+
+        function toggleSubFile() {
+            const hasSub = document.getElementById('hasSubFile').checked;
+            const container = document.getElementById('subHtmlContainer');
+            if (hasSub) container.classList.remove('hidden');
+            else container.classList.add('hidden');
+        }
+
+        /* FORM SUBMIT */
+        document.getElementById('createForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const grade = document.getElementById('gradeSelect').value;
+            const category = document.getElementById('categoryInput').value;
+            if (!category) return showToast('Chưa chọn danh mục!', 'error');
+
+            const contentType = document.querySelector('input[name="contentType"]:checked').value;
+            const title = document.getElementById('titleInput').value;
+            const desc = document.getElementById('descInput').value;
+
+            // Xử lý dữ liệu cơ bản
+            let newContent = {
+                id: Date.now(), grade: parseInt(grade), category: category,
+                subject: document.getElementById('subjectSelect').value,
+                title: title, desc: desc, icon: document.getElementById('iconInput').value,
+                createdAt: new Date().toISOString()
+            };
+
+            showToast('🚀 Đang xử lý...', 'info');
+
+            try {
+                // TRƯỜNG HỢP 1: LINK NGOÀI
+                if (contentType === 'link') {
+                    const linkUrl = document.getElementById('linkInput').value;
+                    if (!linkUrl) throw new Error("Vui lòng nhập đường dẫn URL!");
+
+                    newContent.link = linkUrl;
+                    newContent.filePath = null; // Không có file HTML
+                }
+                // TRƯỜNG HỢP 2: UPLOAD HTML
+                else {
+                    let htmlContent = document.getElementById('htmlContent').value;
+                    if (!htmlContent) throw new Error("Vui lòng nhập nội dung HTML!");
+
+                    // Tạo thư mục riêng cho bài giảng: content/lop-x/danh-muc/bai-giang-TIMESTAMP/
+                    const folderName = `${categoryNames[category]}-${Date.now()}`;
+                    const folderPath = `content/lop-${grade}/${categoryNames[category]}/${folderName}`;
+
+                    const fileName = `index.html`; // File chính luôn là index.html
+                    const filePath = `${folderPath}/${fileName}`;
+
+                    // --- XỬ LÝ FILE PHỤ (NẾU CÓ) ---
+                    const hasSub = document.getElementById('hasSubFile').checked;
+                    if (hasSub) {
+                        const subContent = document.getElementById('subHtmlContent').value;
+                        if (subContent) {
+                            showToast('📤 Đang upload file phụ (Test)...', 'info');
+
+                            // File phụ LUÔN LÀ test.html (để src="test.html" hoạt động đúng)
+                            const subFileName = `test.html`;
+                            const subFilePath = `${folderPath}/${subFileName}`;
+
+                            // Upload Sub File
+                            const subBase64 = btoa(unescape(encodeURIComponent(subContent)));
+                            await gitHubAPI(subFilePath, 'PUT', {
+                                message: `Add sub-file test.html for: ${title}`, content: subBase64, branch: 'main'
+                            });
+
+                            // Không cần replace src="test.html" nữa vì file thực sự tên là test.html
+                            // nằm cùng thư mục với index.html
+
+                            newContent.subFilePath = subFilePath;
+                        }
+                    }
+
+                    newContent.filePath = filePath;
+                    newContent.link = null;
+
+                    // 1. Upload HTML File Chính
+                    showToast('📤 Đang upload file HTML chính...', 'info');
+                    const contentBase64 = btoa(unescape(encodeURIComponent(htmlContent)));
+                    await gitHubAPI(filePath, 'PUT', {
+                        message: `Add lesson HTML: ${title}`, content: contentBase64, branch: 'main'
+                    });
+                }
+
+                // 2. Update Database JSON
+                showToast('💾 Đang cập nhật danh sách...', 'info');
+                // Fetch current DB sha first
+                let sha = null;
+                const dbRes = await gitHubAPI('database.json');
+                if (dbRes.ok) {
+                    const dbData = await dbRes.json();
+                    // Lấy lại nội dung mới nhất để tránh conflict
+                    const currentStr = decodeURIComponent(escape(window.atob(dbData.content)));
+                    contentDatabase = JSON.parse(currentStr);
+                    sha = dbData.sha;
+                }
+
+                contentDatabase.push(newContent);
+
+                const dbBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(contentDatabase, null, 2))));
+                await gitHubAPI('database.json', 'PUT', {
+                    message: `Update DB: ${title}`, content: dbBase64, sha: sha, branch: 'main'
+                });
+
+                showToast('✅ Thành công! Website sẽ cập nhật sau 2 phút.', 'success');
+                this.reset();
+                // Reset UI về mặc định
+                document.querySelector('input[value="html"]').click();
+                document.getElementById('hasSubFile').checked = false;
+                toggleSubFile();
+                setTimeout(() => switchTab('manage'), 1500);
+
+            } catch (err) {
+                showToast(`❌ Lỗi: ${err.message}`, 'error');
+            }
+        });
+
+        // UTIL
+        const categoryNames = { lectures: 'bai-giang', homework: 'bai-tap', exams: 'de-thi', outlines: 'de-cuong' };
+
+        async function deleteContentFromGitHub(id) {
+            if (!confirm('Bạn có chắc muốn xóa nội dung này vĩnh viễn không?')) return;
+
+            const item = contentDatabase.find(i => i.id === id);
+            if (!item) return;
+
+            showToast('🗑️ Đang xóa trên GitHub...', 'info');
+
+            try {
+                // 1. Xóa file HTML (nếu có)
+                try {
+                    const resFile = await gitHubAPI(item.filePath);
+                    if (resFile.ok) {
+                        const fileData = await resFile.json();
+                        await gitHubAPI(item.filePath, 'DELETE', {
+                            message: `Delete lesson: ${item.title}`,
+                            sha: fileData.sha,
+                            branch: 'main'
+                        });
+                    }
+                } catch (e) { console.warn("File HTML không tồn tại hoặc đã bị xóa"); }
+
+                // 2. Cập nhật database.json
+                // Phải lấy SHA mới nhất của database
+                const resDb = await gitHubAPI('database.json');
+                if (resDb.ok) {
+                    const dbData = await resDb.json();
+
+                    // Lọc bỏ item xóa
+                    const newDb = contentDatabase.filter(i => i.id !== id);
+                    const dbContentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(newDb, null, 2))));
+
+                    await gitHubAPI('database.json', 'PUT', {
+                        message: `Remove lesson from DB: ${item.title}`,
+                        content: dbContentBase64,
+                        sha: dbData.sha,
+                        branch: 'main'
+                    });
+
+                    // Update local state
+                    contentDatabase = newDb;
+                    renderContentList();
+                    showToast('✅ Đã xóa thành công!', 'success');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast(`❌ Lỗi xóa: ${err.message}`, 'error');
+            }
+        }
+
+        function renderContentList() {
+            const listEl = document.getElementById('contentList');
+            if (!contentDatabase || contentDatabase.length === 0) {
+                listEl.innerHTML = '';
+                document.getElementById('emptyManage').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('emptyManage').classList.add('hidden');
+
+            const gradeFilter = document.getElementById('filterGrade').value;
+            const displayed = gradeFilter ? contentDatabase.filter(i => i.grade == gradeFilter) : contentDatabase;
+
+            listEl.innerHTML = displayed.map(item => `
+                <div class="p-4 border rounded-xl bg-slate-50 flex justify-between items-center group hover:bg-white hover:shadow-md transition">
+                    <div>
+                        <div class="font-bold text-slate-800 group-hover:text-blue-600 transition">${item.title}</div>
+                        <div class="text-xs text-slate-500 mb-1">Lớp ${item.grade} | ${item.category}</div>
+                        <a href="https://${GH_OWNER}.github.io/${GH_REPO}/${item.filePath}" target="_blank" class="text-xs text-blue-500 hover:underline font-mono bg-blue-50 px-2 py-1 rounded">
+                            <i class="fas fa-external-link-alt mr-1"></i>Xem thử
+                        </a>
+                    </div>
+                    <div class="pl-4">
+                        <button onclick="deleteContentFromGitHub(${item.id})" class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 rounded-xl transition shadow-sm" title="Xóa bài giảng này">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = msg;
+            t.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => t.classList.add('translate-y-24', 'opacity-0'), 4000);
+        }
+
+        async function checkStatus() {
+            showToast('Đang kiểm tra...', 'info');
+            try {
+                await gitHubAPI('database.json');
+                showToast('✅ Kết nối ổn định!', 'success');
+            } catch (e) { showToast('❌ Mất kết nối!', 'error'); }
+        }
+    </script>
+</body>
+
+</html>
