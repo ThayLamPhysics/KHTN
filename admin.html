@@ -872,6 +872,33 @@
                 showToast('✅ Kết nối ổn định!', 'success');
             } catch (e) { showToast('❌ Mất kết nối!', 'error'); }
         }
+
+        // Thêm nút chức năng vào Header (Logout & Change Token)
+        setTimeout(() => {
+            const headerActions = document.querySelector('header .flex.gap-2');
+            if (headerActions && !document.getElementById('btnLogout')) {
+                // Change Token Button
+                const tokenBtn = document.createElement('button');
+                tokenBtn.className = 'px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition mr-2 border border-blue-100';
+                tokenBtn.innerHTML = '<i class="fas fa-key mr-2"></i>Đổi Token';
+                tokenBtn.onclick = showTokenModal;
+
+                // Logout Button
+                const logoutBtn = document.createElement('button');
+                logoutBtn.id = 'btnLogout';
+                logoutBtn.className = 'px-4 py-2 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-red-50 hover:text-red-600 transition border border-slate-200';
+                logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt mr-2"></i>Thoát';
+                logoutBtn.onclick = () => {
+                    if (confirm('Đăng xuất khỏi Admin?')) {
+                        sessionStorage.removeItem('ADMIN_LOGGED_IN');
+                        location.reload();
+                    }
+                };
+
+                headerActions.prepend(tokenBtn);
+                headerActions.appendChild(logoutBtn);
+            }
+        }, 1000);
     </script>
 </body>
 
