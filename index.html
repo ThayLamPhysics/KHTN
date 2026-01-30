@@ -273,13 +273,19 @@
                 padding-top: 10px !important;
             }
 
-            #homeView {
+            #homeView:not(.hidden) {
                 height: 100%;
                 display: flex;
                 flex-direction: column;
                 justify-content: flex-start;
                 align-items: center;
                 width: 100%;
+            }
+
+            /* Đảm bảo ẩn tuyệt đối nếu có class hidden */
+            #homeView.hidden,
+            #carouselContainer.hidden {
+                display: none !important;
             }
 
             #carouselContainer {
