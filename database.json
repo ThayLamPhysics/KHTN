@@ -75,5 +75,18 @@
     "filePath": "",
     "subFilePath": null,
     "link": "https://thaylamphysics.github.io/phy8-20260206/"
+  },
+  {
+    "id": 1770712840746,
+    "title": "TEST CHƯƠNG 3 CẢM ỨNG TỪ - TỪ TRƯỜNG",
+    "grade": 12,
+    "category": "lectures",
+    "subject": "ly",
+    "icon": "fa-book",
+    "desc": "",
+    "createdAt": "2026-02-10T08:40:40.746Z",
+    "filePath": "",
+    "subFilePath": null,
+    "link": "https://thaylamphysics.github.io/phy12-20260210/"
   }
 ]
