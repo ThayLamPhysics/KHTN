@@ -374,7 +374,7 @@
     <!-- Navbar đã xóa theo yêu cầu -->
 
     <!-- MAIN CONTENT -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 relative w-full">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 relative w-full h-screen" style="height: 100dvh;">
 
         <!-- VIEW 1: HOME (3D CAROUSEL) -->
         <div id="homeView" class="fade-in transition-opacity duration-500 w-full">
@@ -580,6 +580,58 @@
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Choice Modal: Làm bài test hoặc Tải PDF -->
+    <div id="choiceModal" class="fixed inset-0 z-[150] hidden">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeChoiceModal()"></div>
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden fade-in">
+                <button onclick="closeChoiceModal()"
+                    class="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition"><i
+                        class="fa-solid fa-xmark"></i></button>
+                <div class="px-6 pt-8 pb-4 text-center">
+                    <span id="choiceSubjectBadge"
+                        class="inline-block px-3 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-600 mb-3">Môn học</span>
+                    <h3 class="text-xl font-bold text-slate-900" id="choiceTitle">Tiêu đề bài học</h3>
+                    <p class="text-sm text-slate-500 mt-1">Bạn muốn làm gì với bài học này?</p>
+                </div>
+                <div class="px-6 pb-8 space-y-3">
+                    <button id="choiceTestBtn" onclick="choiceOpenTest()"
+                        class="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-orange-200 bg-orange-50 hover:border-orange-400 hover:shadow-lg transition text-left group">
+                        <div class="w-12 h-12 flex-shrink-0 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-stopwatch"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800">Vào làm bài test</p>
+                            <p class="text-xs text-slate-500">Kiểm tra kiến thức ngay</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-orange-400"></i>
+                    </button>
+                    <button id="choiceTestBtnDisabled" disabled
+                        class="hidden w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-left opacity-70 cursor-not-allowed">
+                        <div class="w-12 h-12 flex-shrink-0 rounded-xl bg-slate-200 flex items-center justify-center text-slate-400 text-xl">
+                            <i class="fa-solid fa-stopwatch"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-400">Bài test đang cập nhật</p>
+                            <p class="text-xs text-slate-400">Sẽ sớm có, bạn quay lại sau nhé!</p>
+                        </div>
+                    </button>
+                    <button onclick="choiceOpenPdf()"
+                        class="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-blue-200 bg-blue-50 hover:border-blue-400 hover:shadow-lg transition text-left group">
+                        <div class="w-12 h-12 flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800">Tải tài liệu PDF</p>
+                            <p class="text-xs text-slate-500">Xem hoặc tải bài giảng về máy</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-blue-400"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1214,6 +1266,20 @@
                 let colorClass = lesson.subject === 'ly' ? 'text-blue-600 bg-blue-50' : (lesson.subject === 'hoa' ? 'text-purple-600 bg-purple-50' : 'text-green-600 bg-green-50');
                 let subjectName = lesson.subject === 'ly' ? 'Vật Lý' : (lesson.subject === 'hoa' ? 'Hóa Học' : 'Sinh Học');
 
+                let descText = lesson.desc || 'Không có mô tả';
+                let descLinkBtn = '';
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                if (lesson.desc && lesson.desc.match(urlRegex)) {
+                    const urls = lesson.desc.match(urlRegex);
+                    const buttonsHtml = urls.map((url, i) =>
+                        `<button onclick="event.stopPropagation(); window.open('${url}', '_blank');" class="inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition"><i class="fa-solid fa-link mr-1.5"></i>Link ${urls.length > 1 ? i + 1 : 'đính kèm'}</button>`
+                    ).join('');
+                    descLinkBtn = `<div class="mt-2 flex flex-wrap gap-2">${buttonsHtml}</div>`;
+                    descText = descText.replace(urlRegex, '').trim();
+                }
+
+                let descHtml = descText ? `<p class="text-sm text-slate-500 break-all">${descText}</p>` : '';
+
                 const card = document.createElement('div');
                 card.style.animationDelay = `${index * 0.1}s`;
                 // Thêm onclick trực tiếp vào card -> Mở ngay lập tức
@@ -1225,7 +1291,8 @@
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">${subjectName} • Lớp ${lesson.grade}</p>
                         <h4 class="text-lg font-bold text-slate-800 truncate">${lesson.title}</h4>
-                        <p class="text-sm text-slate-500 truncate">${lesson.desc || 'Không có mô tả'}</p>
+                        ${descHtml}
+                        ${descLinkBtn}
                     </div>
                     <div class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center"><i class="fa-solid fa-chevron-right text-xs"></i></div>
                 `;
@@ -1244,6 +1311,12 @@
                 return;
             }
 
+            // Bài có pdfLink hoặc testLink -> mở popup 2 lựa chọn (Làm test / Tải PDF)
+            if (lesson.pdfLink || lesson.testLink) {
+                openChoiceModal(lesson);
+                return;
+            }
+
             let url = lesson.link;
 
             // Xử lý link GitHub Pages
@@ -1257,6 +1330,53 @@
                 window.open(url, '_blank');
             } else {
                 showToast("Lỗi: Không tìm thấy link bài học!", 'error');
+            }
+        }
+
+        // ===== Popup lựa chọn: Làm bài test hoặc Tải tài liệu PDF =====
+        let currentChoiceLesson = null;
+
+        function openChoiceModal(lesson) {
+            currentChoiceLesson = lesson;
+            document.getElementById('choiceTitle').innerText = lesson.title;
+
+            let color = 'blue', name = 'Vật Lý';
+            if (lesson.subject === 'hoa') { color = 'purple'; name = 'Hóa Học'; }
+            if (lesson.subject === 'sinh') { color = 'green'; name = 'Sinh Học'; }
+            const badge = document.getElementById('choiceSubjectBadge');
+            badge.innerText = `${name} • Lớp ${lesson.grade}`;
+            badge.className = `inline-block px-3 py-1 text-xs font-bold rounded-full bg-${color}-50 text-${color}-600 mb-3`;
+
+            // Nút test: hiện nút thật nếu có link, ngược lại hiện nút "đang cập nhật"
+            document.getElementById('choiceTestBtn').classList.toggle('hidden', !lesson.testLink);
+            document.getElementById('choiceTestBtnDisabled').classList.toggle('hidden', !!lesson.testLink);
+
+            document.getElementById('choiceModal').classList.remove('hidden');
+        }
+
+        function closeChoiceModal() {
+            document.getElementById('choiceModal').classList.add('hidden');
+            currentChoiceLesson = null;
+        }
+
+        function choiceOpenTest() {
+            if (currentChoiceLesson && currentChoiceLesson.testLink) {
+                window.open(currentChoiceLesson.testLink, '_blank');
+                closeChoiceModal();
+            }
+        }
+
+        function choiceOpenPdf() {
+            if (!currentChoiceLesson) return;
+            let url = currentChoiceLesson.pdfLink;
+            if (!url && currentChoiceLesson.filePath) {
+                url = 'https://ThayLamPhysics.github.io/KHTN/' + currentChoiceLesson.filePath;
+            }
+            if (url) {
+                window.open(url, '_blank');
+                closeChoiceModal();
+            } else {
+                showToast("Lỗi: Không tìm thấy file PDF!");
             }
         }
 
