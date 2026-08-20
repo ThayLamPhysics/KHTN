@@ -172,36 +172,162 @@
             height: 400px;
             left: 10px;
             top: 10px;
-            background: rgba(255, 255, 255, 0.65);
             border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.8);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-            backdrop-filter: blur(16px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
             font-size: 24px;
             font-weight: bold;
             color: #334155;
             cursor: pointer;
-            transition: transform 0.6s, opacity 0.6s, border-color 0.3s, box-shadow 0.3s, background 0.3s;
-            opacity: 0.5;
+            transition: transform 0.6s, opacity 0.6s, border-color 0.3s, box-shadow 0.3s;
             transform-origin: center center;
+            /* preserve-3d để các phần tử con nổi khối theo chiều sâu (parallax) */
+            transform-style: preserve-3d;
             will-change: transform, opacity;
             /* Ngăn chặn chọn văn bản khi vuốt */
             user-select: none;
             -webkit-user-select: none;
         }
 
-        .carousel-cell.active-card {
+        /* Lớp kính mờ tách riêng để không làm phẳng hiệu ứng 3D của nội dung */
+        .carousel-cell::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            transform: translateZ(0);
+            transition: background 0.4s;
+        }
+
+        /* Màn phủ làm mờ các thẻ không được chọn (thay cho opacity để giữ 3D) */
+        .carousel-cell::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 30px;
+            background: rgba(224, 236, 250, 0.55);
+            transform: translateZ(80px);
+            pointer-events: none;
+            transition: opacity 0.5s;
             opacity: 1;
-            transform: scale(1.05) translateZ(30px);
-            background: rgba(255, 255, 255, 0.85);
+        }
+
+        .carousel-cell.near-card::after {
+            opacity: 0.45;
+        }
+
+        .carousel-cell.active-card {
             border: 1px solid rgba(255, 255, 255, 1);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 25px 60px rgba(30, 64, 175, 0.18);
             z-index: 100;
+        }
+
+        .carousel-cell.active-card::before {
+            background: rgba(255, 255, 255, 0.88);
+        }
+
+        .carousel-cell.active-card::after {
+            opacity: 0;
+        }
+
+        /* Nội dung thẻ: 3 lớp độ sâu tạo hiệu ứng nổi khối khi xoay */
+        .cell-inner {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            transform-style: preserve-3d;
+        }
+
+        .cell-badge {
+            transform: translateZ(40px);
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .cell-title {
+            transform: translateZ(26px);
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .cell-sub {
+            transform: translateZ(14px);
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .active-card .cell-badge {
+            animation: badgeFloat 3.2s ease-in-out infinite;
+        }
+
+        .active-card .cell-title {
+            transform: translateZ(46px);
+        }
+
+        .active-card .cell-sub {
+            transform: translateZ(30px);
+        }
+
+        @keyframes badgeFloat {
+
+            0%,
+            100% {
+                transform: translateZ(70px) scale(1.1) translateY(0);
+            }
+
+            50% {
+                transform: translateZ(70px) scale(1.1) translateY(-7px);
+            }
+        }
+
+        /* Vệt sáng quét qua thẻ đang chọn (hiệu ứng kính) */
+        .cell-shine {
+            position: absolute;
+            inset: 0;
+            border-radius: 30px;
+            overflow: hidden;
+            pointer-events: none;
+            transform: translateZ(55px);
+        }
+
+        .cell-shine::before {
+            content: '';
+            position: absolute;
+            top: -60%;
+            left: 0;
+            width: 55%;
+            height: 220%;
+            background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+            transform: translateX(-160%) rotate(10deg);
+            opacity: 0;
+        }
+
+        .active-card .cell-shine::before {
+            animation: shineSweep 3s ease-in-out infinite;
+        }
+
+        @keyframes shineSweep {
+            0% {
+                transform: translateX(-160%) rotate(10deg);
+                opacity: 0;
+            }
+
+            12% {
+                opacity: 0.9;
+            }
+
+            45% {
+                transform: translateX(320%) rotate(10deg);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateX(320%) rotate(10deg);
+                opacity: 0;
+            }
         }
 
         .nav-btn {
@@ -800,11 +926,14 @@
                 cell.dataset.neon = neonShadow;
                 cell.dataset.index = i;
                 cell.innerHTML = `
-                    <div class="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold mb-2 shadow-inner bg-white/60 backdrop-blur-sm border border-white/50 ${colorClass}">
-                        <span>${grade}</span>
+                    <div class="cell-shine"></div>
+                    <div class="cell-inner">
+                        <div class="cell-badge w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold mb-2 shadow-inner bg-white/60 backdrop-blur-sm border border-white/50 ${colorClass}">
+                            <span>${grade}</span>
+                        </div>
+                        <span class="cell-title text-3xl font-extrabold text-slate-700 drop-shadow-sm">Lớp ${grade}</span>
+                        <span class="cell-sub text-sm text-slate-500 font-medium mt-2 bg-white/50 px-3 py-1 rounded-full border border-white/40">Bấm để vào học</span>
                     </div>
-                    <span class="text-3xl font-extrabold text-slate-700 drop-shadow-sm">Lớp ${grade}</span>
-                    <span class="text-sm text-slate-500 font-medium mt-2 bg-white/50 px-3 py-1 rounded-full border border-white/40">Bấm để vào học</span>
                 `;
 
                 const angle = theta * i;
@@ -972,7 +1101,7 @@
         function updateActiveCard() {
             const cells = document.querySelectorAll('.carousel-cell');
             cells.forEach(cell => {
-                cell.classList.remove('active-card');
+                cell.classList.remove('active-card', 'near-card');
                 cell.classList.remove(cell.dataset.neon);
             });
 
@@ -985,6 +1114,12 @@
                 activeCell.classList.add('active-card');
                 activeCell.classList.add(activeCell.dataset.neon);
             }
+
+            // 2 thẻ kề bên sáng vừa phải -> tạo cảm giác chiều sâu 3 lớp
+            const prevIndex = (normIndex + cellCount - 1) % cellCount;
+            const nextIndex = (normIndex + 1) % cellCount;
+            document.querySelector(`.carousel-cell[data-index="${prevIndex}"]`)?.classList.add('near-card');
+            document.querySelector(`.carousel-cell[data-index="${nextIndex}"]`)?.classList.add('near-card');
         }
 
         function manualRotate(dir) {
