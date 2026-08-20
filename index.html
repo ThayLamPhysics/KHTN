@@ -79,6 +79,12 @@
             will-change: transform;
         }
 
+        /* Khi rê chuột: thẻ nghiêng 3D theo con trỏ - transition nhanh để bám theo chuột */
+        .scroll-pop.tilting {
+            transition: transform 0.09s ease-out !important;
+            box-shadow: 0 24px 48px -12px rgba(30, 64, 175, 0.22) !important;
+        }
+
         .lesson-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
@@ -1256,6 +1262,7 @@
             initCarousel();
             loadDatabase();
             setupScrollFX();
+            setupTilt3D();
         });
 
         window.addEventListener('popstate', (event) => {
@@ -1472,6 +1479,8 @@
             const range = ch * 0.6;                       // vùng ảnh hưởng của hiệu ứng
 
             cards.forEach(card => {
+                if (card === tiltCard) return; // thẻ đang nghiêng theo chuột thì không ghi đè
+
                 // Vị trí thẻ trong nội dung cuộn (không dùng getBoundingClientRect
                 // vì nó bị chính transform làm sai lệch -> gây rung)
                 let top = 0, el = card;
@@ -1483,6 +1492,41 @@
                 const tilt = Math.max(-1, Math.min(1, dist / range)) * 7; // nghiêng theo chiều cuộn
                 card.style.transform = `perspective(1000px) rotateX(${(-tilt).toFixed(2)}deg) scale(${scale.toFixed(3)})`;
             });
+        }
+
+        // ===== HIỆU ỨNG 3D TILT: rê chuột đến thẻ nào thì thẻ đó phóng to và nghiêng theo con trỏ =====
+        let tiltCard = null;
+
+        function setupTilt3D() {
+            // Màn hình cảm ứng không có hover -> chỉ dùng hiệu ứng scroll 3D
+            if (window.matchMedia('(hover: none)').matches) return;
+
+            [categoryView, listView].forEach(container => {
+                container.addEventListener('mousemove', (e) => {
+                    const card = e.target.closest('.scroll-pop');
+                    if (tiltCard && tiltCard !== card) resetTilt(container);
+                    if (!card) return;
+
+                    tiltCard = card;
+                    card.classList.add('tilting');
+                    const r = card.getBoundingClientRect();
+                    const px = (e.clientX - r.left) / r.width - 0.5;  // -0.5 .. 0.5
+                    const py = (e.clientY - r.top) / r.height - 0.5;
+                    const rotY = (px * 10).toFixed(2);   // nghiêng trái/phải theo chuột
+                    const rotX = (-py * 8).toFixed(2);   // nghiêng trước/sau theo chuột
+                    card.style.transform = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.05)`;
+                    card.style.zIndex = 20;
+                });
+                container.addEventListener('mouseleave', () => resetTilt(container));
+            });
+        }
+
+        function resetTilt(container) {
+            if (!tiltCard) return;
+            tiltCard.classList.remove('tilting');
+            tiltCard.style.zIndex = '';
+            tiltCard = null;
+            applyScrollFX(container); // trả thẻ về trạng thái scroll 3D bình thường
         }
 
         function setupScrollFX() {
