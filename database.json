@@ -12,19 +12,6 @@
     "filePath": null
   },
   {
-    "id": 1769830652684,
-    "title": "HỆ NỘI TIẾT-DA VÀ ĐIỀU HÒA THÂN NHIỆT",
-    "grade": 8,
-    "category": "lectures",
-    "subject": "sinh",
-    "icon": "fa-book",
-    "desc": "https://st2pn-my.sharepoint.com/:b:/g/personal/lam_htkt_st2pn_onmicrosoft_com/IQBI_ZOHU843TaJxFz40neaNAWniqAIV1BfJKHAgmgi_wqQ?e=DrAUhA",
-    "createdAt": "2026-01-31T03:37:32.684Z",
-    "filePath": "",
-    "subFilePath": null,
-    "link": "https://thaylamphysics.github.io/bio8-20260131/"
-  },
-  {
     "id": 1770176196777,
     "title": "bài tập về nhà hệ nội tiết",
     "grade": 8,
@@ -62,19 +49,6 @@
     "filePath": "",
     "subFilePath": null,
     "link": "https://thaylamphysics.github.io/btvntinhchatvatlykimloai/"
-  },
-  {
-    "id": 1770388173495,
-    "title": "Năng lượng nhiệt và nhiệt năng",
-    "grade": 8,
-    "category": "lectures",
-    "subject": "ly",
-    "icon": "fa-book",
-    "desc": "",
-    "createdAt": "2026-02-06T14:29:33.495Z",
-    "filePath": "",
-    "subFilePath": null,
-    "link": "https://thaylamphysics.github.io/phy8-20260206/"
   },
   {
     "id": 1770712840746,
