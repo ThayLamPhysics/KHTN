@@ -608,8 +608,8 @@
                             <i class="fa-solid fa-stopwatch"></i>
                         </div>
                         <div class="flex-1">
-                            <p class="font-bold text-slate-800">Vào làm bài test</p>
-                            <p class="text-xs text-slate-500">Kiểm tra kiến thức ngay</p>
+                            <p class="font-bold text-slate-800" id="choiceTestTitle">Vào làm bài test</p>
+                            <p class="text-xs text-slate-500" id="choiceTestSub">Kiểm tra kiến thức ngay</p>
                         </div>
                         <i class="fa-solid fa-chevron-right text-orange-400"></i>
                     </button>
@@ -619,7 +619,7 @@
                             <i class="fa-solid fa-stopwatch"></i>
                         </div>
                         <div class="flex-1">
-                            <p class="font-bold text-slate-400">Bài test đang cập nhật</p>
+                            <p class="font-bold text-slate-400" id="choiceTestDisabledTitle">Bài test đang cập nhật</p>
                             <p class="text-xs text-slate-400">Sẽ sớm có, bạn quay lại sau nhé!</p>
                         </div>
                     </button>
@@ -630,7 +630,7 @@
                         </div>
                         <div class="flex-1">
                             <p class="font-bold text-slate-800">Tải tài liệu PDF</p>
-                            <p class="text-xs text-slate-500">Xem hoặc tải bài giảng về máy</p>
+                            <p class="text-xs text-slate-500" id="choicePdfSub">Xem hoặc tải bài giảng về máy</p>
                         </div>
                         <i class="fa-solid fa-chevron-right text-blue-400"></i>
                     </button>
@@ -1348,6 +1348,13 @@
             const badge = document.getElementById('choiceSubjectBadge');
             badge.innerText = `${name} • Lớp ${lesson.grade}`;
             badge.className = `inline-block px-3 py-1 text-xs font-bold rounded-full bg-${color}-50 text-${color}-600 mb-3`;
+
+            // Đổi chữ trên nút theo loại bài: bài giảng -> bài test, BTVN -> bài tập online
+            const isHomework = lesson.category === 'homework';
+            document.getElementById('choiceTestTitle').innerText = isHomework ? 'Vào làm bài tập online' : 'Vào làm bài test';
+            document.getElementById('choiceTestSub').innerText = isHomework ? 'Làm bài tập về nhà trực tuyến' : 'Kiểm tra kiến thức ngay';
+            document.getElementById('choiceTestDisabledTitle').innerText = isHomework ? 'Bài tập online đang cập nhật' : 'Bài test đang cập nhật';
+            document.getElementById('choicePdfSub').innerText = isHomework ? 'Xem hoặc tải bài tập về máy' : 'Xem hoặc tải bài giảng về máy';
 
             // Nút test: hiện nút thật nếu có link, ngược lại hiện nút "đang cập nhật"
             document.getElementById('choiceTestBtn').classList.toggle('hidden', !lesson.testLink);
