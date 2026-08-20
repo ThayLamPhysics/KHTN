@@ -763,6 +763,17 @@
                             <p class="text-xs text-slate-400">Sẽ sớm có, bạn quay lại sau nhé!</p>
                         </div>
                     </button>
+                    <button id="choiceHdBtn" onclick="choiceOpenHd()"
+                        class="hidden w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50 hover:border-emerald-400 hover:shadow-lg transition text-left group">
+                        <div class="w-12 h-12 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-lightbulb"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800">Xem hướng dẫn giải</p>
+                            <p class="text-xs text-slate-500">Lời giải chi tiết từng bài</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-emerald-400"></i>
+                    </button>
                     <button onclick="choiceOpenPdf()"
                         class="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-blue-200 bg-blue-50 hover:border-blue-400 hover:shadow-lg transition text-left group">
                         <div class="w-12 h-12 flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
@@ -1602,6 +1613,9 @@
             document.getElementById('choiceTestBtn').classList.toggle('hidden', !lesson.testLink);
             document.getElementById('choiceTestBtnDisabled').classList.toggle('hidden', !!lesson.testLink);
 
+            // Nút hướng dẫn giải: chỉ hiện khi bài có hdLink (BTVN)
+            document.getElementById('choiceHdBtn').classList.toggle('hidden', !lesson.hdLink);
+
             document.getElementById('choiceModal').classList.remove('hidden');
         }
 
@@ -1613,6 +1627,13 @@
         function choiceOpenTest() {
             if (currentChoiceLesson && currentChoiceLesson.testLink) {
                 window.open(currentChoiceLesson.testLink, '_blank');
+                closeChoiceModal();
+            }
+        }
+
+        function choiceOpenHd() {
+            if (currentChoiceLesson && currentChoiceLesson.hdLink) {
+                window.open(currentChoiceLesson.hdLink, '_blank');
                 closeChoiceModal();
             }
         }
