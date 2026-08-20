@@ -74,6 +74,11 @@
             transition: all 0.3s ease;
         }
 
+        /* Thẻ có hiệu ứng scroll 3D (phóng to khi vào giữa màn hình) */
+        .scroll-pop {
+            will-change: transform;
+        }
+
         .lesson-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
@@ -562,7 +567,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <!-- Bài giảng -->
                     <div onclick="selectCategory('lectures')"
-                        class="group cursor-pointer bg-white rounded-3xl p-8 border-2 border-slate-200 hover:border-blue-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                        class="scroll-pop group cursor-pointer bg-white rounded-3xl p-8 border-2 border-slate-200 hover:border-blue-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                         <div
                             class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <i class="fas fa-book text-4xl text-white"></i>
@@ -577,7 +582,7 @@
 
                     <!-- Bài tập về nhà -->
                     <div onclick="selectCategory('homework')"
-                        class="group cursor-pointer bg-white rounded-3xl p-8 border-2 border-slate-200 hover:border-green-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                        class="scroll-pop group cursor-pointer bg-white rounded-3xl p-8 border-2 border-slate-200 hover:border-green-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                         <div
                             class="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <i class="fas fa-pen-to-square text-4xl text-white"></i>
@@ -592,7 +597,7 @@
 
                     <!-- Đề thi -->
                     <div onclick="selectCategory('exams')"
-                        class="group cursor-pointer bg-white rounded-3xl p-8 border-2 border-slate-200 hover:border-orange-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                        class="scroll-pop group cursor-pointer bg-white rounded-3xl p-8 border-2 border-slate-200 hover:border-orange-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                         <div
                             class="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <i class="fas fa-file-pen text-4xl text-white"></i>
@@ -607,7 +612,7 @@
 
                     <!-- Đề cương ôn tập -->
                     <div onclick="selectCategory('outlines')"
-                        class="group cursor-pointer bg-white rounded-3xl p-8 border-2 border-slate-200 hover:border-purple-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                        class="scroll-pop group cursor-pointer bg-white rounded-3xl p-8 border-2 border-slate-200 hover:border-purple-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                         <div
                             class="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <i class="fas fa-clipboard-list text-4xl text-white"></i>
@@ -1250,6 +1255,7 @@
         window.addEventListener('load', () => {
             initCarousel();
             loadDatabase();
+            setupScrollFX();
         });
 
         window.addEventListener('popstate', (event) => {
@@ -1308,13 +1314,15 @@
             categoryView.classList.remove('hidden');
             listView.classList.add('hidden');
             document.getElementById('categoryTitle').innerText = `Lớp ${currentGrade}`;
-            window.scrollTo(0, 0);
+            categoryView.scrollTop = 0;
+            requestAnimationFrame(() => applyScrollFX(categoryView));
         }
 
         function showListViewDOM() {
             homeView.classList.add('hidden');
             categoryView.classList.add('hidden');
             listView.classList.remove('hidden');
+            listView.scrollTop = 0;
 
             const categoryNames = {
                 lectures: 'Bài giảng',
@@ -1425,11 +1433,17 @@
                 let descHtml = descText ? `<p class="text-sm text-slate-500 break-all">${descText}</p>` : '';
 
                 const card = document.createElement('div');
-                card.style.animationDelay = `${index * 0.1}s`;
+                // Giới hạn độ trễ xuất hiện (danh sách dài không phải chờ lâu)
+                card.style.animationDelay = `${Math.min(index * 0.06, 0.6)}s`;
                 // Thêm onclick trực tiếp vào card -> Mở ngay lập tức
                 card.onclick = function () { openLessonDirectly(lesson.id); };
 
-                card.className = 'lesson-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm cursor-pointer flex items-center gap-4 relative fade-in hover:shadow-md transition-all';
+                card.className = 'lesson-card scroll-pop bg-white rounded-2xl p-5 border border-slate-100 shadow-sm cursor-pointer flex items-center gap-4 relative fade-in hover:shadow-md transition-all';
+                // Gỡ animation fade-in sau khi chạy xong để không đè transform của hiệu ứng scroll 3D
+                card.addEventListener('animationend', () => {
+                    card.classList.remove('fade-in');
+                    card.style.animationDelay = '';
+                }, { once: true });
                 card.innerHTML = `
                     <div class="w-14 h-14 flex-shrink-0 rounded-xl ${colorClass} flex items-center justify-center text-2xl"><i class="fa-solid ${lesson.icon}"></i></div>
                     <div class="flex-1 min-w-0">
@@ -1441,6 +1455,48 @@
                     <div class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center"><i class="fa-solid fa-chevron-right text-xs"></i></div>
                 `;
                 gridElement.appendChild(card);
+            });
+
+            // Áp hiệu ứng scroll 3D ngay khi danh sách vừa render
+            requestAnimationFrame(() => applyScrollFX(listView));
+        }
+
+        // ===== HIỆU ỨNG SCROLL 3D: thẻ nào ở giữa màn hình tự phóng to, nghiêng theo chiều cuộn =====
+        function applyScrollFX(container) {
+            if (!container || container.classList.contains('hidden')) return;
+            const cards = container.querySelectorAll('.scroll-pop');
+            if (!cards.length) return;
+
+            const ch = container.clientHeight;
+            const centerY = container.scrollTop + ch / 2; // tâm màn hình (theo nội dung cuộn)
+            const range = ch * 0.6;                       // vùng ảnh hưởng của hiệu ứng
+
+            cards.forEach(card => {
+                // Vị trí thẻ trong nội dung cuộn (không dùng getBoundingClientRect
+                // vì nó bị chính transform làm sai lệch -> gây rung)
+                let top = 0, el = card;
+                while (el && el !== container) { top += el.offsetTop; el = el.offsetParent; }
+                const dist = (top + card.offsetHeight / 2) - centerY;
+
+                const t = Math.max(0, 1 - Math.abs(dist) / range); // 1 = ngay giữa màn hình
+                const scale = 0.94 + 0.08 * t;                     // giữa: phóng to ~1.02
+                const tilt = Math.max(-1, Math.min(1, dist / range)) * 7; // nghiêng theo chiều cuộn
+                card.style.transform = `perspective(1000px) rotateX(${(-tilt).toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+            });
+        }
+
+        function setupScrollFX() {
+            [categoryView, listView].forEach(container => {
+                let ticking = false;
+                container.addEventListener('scroll', () => {
+                    if (ticking) return;
+                    ticking = true;
+                    requestAnimationFrame(() => { ticking = false; applyScrollFX(container); });
+                }, { passive: true });
+            });
+            window.addEventListener('resize', () => {
+                applyScrollFX(categoryView);
+                applyScrollFX(listView);
             });
         }
 
