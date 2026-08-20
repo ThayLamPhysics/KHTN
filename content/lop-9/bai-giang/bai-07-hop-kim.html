@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bài 07: Hợp kim</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Be Vietnam Pro',sans-serif; background:#f1f5f9; display:flex; flex-direction:column; height:100vh; }
+  header { background:#fff; border-bottom:1px solid #e2e8f0; padding:10px 16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .badge { background:#9333ea1a; color:#9333ea; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; }
+  h1 { font-size:15px; color:#1e293b; flex:1; min-width:200px; }
+  .btn { display:inline-flex; align-items:center; gap:6px; background:#9333ea; color:#fff; text-decoration:none; font-size:13px; font-weight:600; padding:8px 14px; border-radius:10px; }
+  .btn.secondary { background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; }
+  .viewer { flex:1; }
+  .viewer iframe { width:100%; height:100%; border:none; }
+  .fallback { display:none; flex:1; align-items:center; justify-content:center; padding:24px; }
+  .fallback .card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:32px 24px; text-align:center; max-width:360px; }
+  .fallback i { font-size:44px; color:#9333ea; margin-bottom:14px; }
+  .fallback p { color:#475569; font-size:14px; margin-bottom:18px; }
+  @media (max-width: 768px) {
+    .viewer { display:none; }
+    .fallback { display:flex; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <span class="badge">Hóa Học • Lớp 9</span>
+  <h1>Bài 07: Hợp kim</h1>
+  <a class="btn secondary" href="bai-07-hop-kim.pdf" target="_blank"><i class="fas fa-expand"></i> Toàn màn hình</a>
+  <a class="btn" href="bai-07-hop-kim.pdf" download><i class="fas fa-download"></i> Tải PDF</a>
+</header>
+<div class="viewer"><iframe src="bai-07-hop-kim.pdf"></iframe></div>
+<div class="fallback">
+  <div class="card">
+    <i class="fas fa-flask"></i>
+    <p><b>Bài 07: Hợp kim</b><br>Bấm nút bên dưới để mở tài liệu PDF.</p>
+    <a class="btn" href="bai-07-hop-kim.pdf" target="_blank"><i class="fas fa-file-pdf"></i> Mở tài liệu</a>
+  </div>
+</div>
+</body>
+</html>
